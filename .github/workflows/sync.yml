@@ -1,0 +1,192 @@
+name: mirror
+
+# 把一个 GitHub 仓库原样搬到本仓库，每 30 分钟跑一次。
+#
+# 为什么不直接在网页上点 Fork：
+#   fork 会进入同一个 fork network，上游仓库被 DMCA 处理时，所有 fork 会被一起处理。
+#   本工作流搬出来的是一个**完全独立的仓库**，不共享任何网络关系。
+#
+# 部署方式见 README。最少只要设一个仓库变量 UPSTREAM=owner/repo 就能跑。
+
+on:
+  schedule:
+    - cron: "17,47 * * * *" # 每 30 分钟一次（UTC），错开整点和半点
+  workflow_dispatch:
+    inputs:
+      upstream:
+        description: "临时覆盖上游（owner/repo）；留空则用仓库变量 UPSTREAM"
+        required: false
+        default: ""
+      release_limit:
+        description: "同步最近多少个 Release（0 = 只同步源码和 tag）"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+# 同一时间只跑一个：两轮叠在一起会互相 push 打架。
+# 不用 cancel-in-progress —— 同步跑到一半被打断会留下半新半旧的状态。
+concurrency:
+  group: mirror
+  cancel-in-progress: false
+
+env:
+  UPSTREAM: ${{ github.event.inputs.upstream || vars.UPSTREAM }}
+  UPSTREAM_BRANCH: ${{ vars.UPSTREAM_BRANCH || 'main' }}
+  TARGET_BRANCH: ${{ vars.TARGET_BRANCH || 'main' }}
+  RELEASE_LIMIT: ${{ github.event.inputs.release_limit || vars.RELEASE_LIMIT || '6' }}
+  TAG_PATTERN: ${{ vars.TAG_PATTERN || '*' }}
+  # 私有上游、或者不想吃 GitHub 匿名限流时，配这个 secret；公开上游留空即可
+  UPSTREAM_TOKEN: ${{ secrets.UPSTREAM_TOKEN }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    # 必须小于 cron 间隔，否则一次卡死的运行会一直占着并发组，把后面几轮全堵住
+    timeout-minutes: 25
+
+    steps:
+      - name: 检查配置
+        run: |
+          set -euo pipefail
+          if [ -z "${UPSTREAM:-}" ]; then
+            echo "::error::没有配置上游。请到 Settings → Secrets and variables → Actions → Variables 新建 UPSTREAM，值填 owner/repo"
+            exit 1
+          fi
+          echo "上游：$UPSTREAM（分支 $UPSTREAM_BRANCH）"
+          echo "目标：${{ github.repository }}（分支 $TARGET_BRANCH）"
+
+      - name: 检出本仓库
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: 配置 git 身份
+        run: |
+          set -euo pipefail
+          git config user.name  "mirror-bot"
+          git config user.email "mirror-bot@users.noreply.github.com"
+
+      # ── 1. 源码 ────────────────────────────────────────────────
+      # 用 rsync 覆盖，而不是 git push --mirror：
+      # --mirror 会把本仓库的 .github 一起删掉，下一次就没人来同步了。
+      # --delete 保证上游删掉的文件这里也跟着删。
+      - name: 同步源码
+        run: |
+          set -euo pipefail
+          if [ -n "${UPSTREAM_TOKEN:-}" ]; then
+            CLONE_URL="https://x-access-token:${UPSTREAM_TOKEN}@github.com/${UPSTREAM}.git"
+          else
+            CLONE_URL="https://github.com/${UPSTREAM}.git"
+          fi
+
+          rm -rf /tmp/upstream
+          git clone --depth 1 --branch "$UPSTREAM_BRANCH" "$CLONE_URL" /tmp/upstream
+
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.mirror-keepalive' \
+            /tmp/upstream/ ./
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "源码已是最新"
+          else
+            git commit -m "mirror: 跟随上游 $(git -C /tmp/upstream rev-parse --short HEAD)"
+            git push origin "HEAD:${TARGET_BRANCH}"
+          fi
+
+      # ── 2. tag ────────────────────────────────────────────────
+      # 有些客户端按 tag 里的版本号比较大小，tag 名一个字符都不能改。
+      # --force：上游重打过 tag 时这里也跟着改。
+      - name: 同步 tag
+        run: |
+          set -euo pipefail
+          git remote remove upstream 2>/dev/null || true
+          git remote add upstream "https://github.com/${UPSTREAM}.git"
+          git fetch upstream --tags --force
+          if git ls-remote --tags upstream | grep -q .; then
+            git push origin "+refs/tags/${TAG_PATTERN}:refs/tags/${TAG_PATTERN}" --force
+          else
+            echo "上游没有 tag"
+          fi
+
+      # ── 3. Release 与资产 ─────────────────────────────────────
+      # git 传不了 Release 对象和附件，只能逐个重建。
+      # prerelease 标记必须和上游一致：很多更新器会跳过被标成 prerelease 的 Release。
+      - name: 同步 Release
+        run: |
+          set -euo pipefail
+          if [ "$RELEASE_LIMIT" = "0" ]; then
+            echo "按要求跳过 Release 同步"
+            exit 0
+          fi
+
+          mkdir -p /tmp/rel
+          gh api --paginate "repos/${UPSTREAM}/releases?per_page=100" > /tmp/rel/all.json
+
+          # 上游当前的最新正式版（isLatest 字段不可靠，这里取第一个非预发布）
+          LATEST=$(jq -r 'first(.[] | select(.prerelease == false and .draft == false) | .tag_name) // ""' /tmp/rel/all.json)
+          echo "上游最新正式版：${LATEST:-（无）}"
+
+          jq -r '.[] | select(.draft == false) | .tag_name' /tmp/rel/all.json \
+            | head -n "$RELEASE_LIMIT" > /tmp/rel/tags.txt
+
+          while read -r TAG; do
+            [ -z "$TAG" ] && continue
+            if gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              echo "已存在，跳过 $TAG"
+              continue
+            fi
+
+            PRE=$(jq -r  --arg t "$TAG" '.[] | select(.tag_name==$t) | .prerelease' /tmp/rel/all.json)
+            NAME=$(jq -r --arg t "$TAG" '.[] | select(.tag_name==$t) | (.name // .tag_name)' /tmp/rel/all.json)
+            jq -r  --arg t "$TAG" '.[] | select(.tag_name==$t) | (.body // "")' /tmp/rel/all.json > /tmp/rel/notes.md
+
+            D="/tmp/rel/assets-$TAG"
+            mkdir -p "$D"
+            gh release download "$TAG" -R "$UPSTREAM" -D "$D" || true
+
+            ARGS=(--target "$TARGET_BRANCH" --title "$NAME" --notes-file /tmp/rel/notes.md)
+            [ "$PRE" = "true" ] && ARGS+=(--prerelease)
+            [ "$TAG" = "$LATEST" ] && ARGS+=(--latest)
+
+            shopt -s nullglob
+            ASSETS=("$D"/*)
+            if [ ${#ASSETS[@]} -gt 0 ]; then
+              gh release create "$TAG" -R "$GITHUB_REPOSITORY" "${ARGS[@]}" "${ASSETS[@]}"
+            else
+              gh release create "$TAG" -R "$GITHUB_REPOSITORY" "${ARGS[@]}"
+            fi
+            echo "已创建 $TAG（prerelease=$PRE）"
+          done < /tmp/rel/tags.txt
+
+      # ── 4. 保活 ───────────────────────────────────────────────
+      # GitHub 会在仓库连续 60 天没有任何提交时自动停掉定时任务。
+      # 上游本身就不动的话，这里补一个空提交把计时器按回去（rsync 已排除这个文件）。
+      - name: 保活
+        if: ${{ vars.KEEPALIVE != 'false' }}
+        run: |
+          set -euo pipefail
+          LAST=$(git log -1 --format=%ct)
+          DAYS=$(( ( $(date +%s) - LAST ) / 86400 ))
+          echo "最近一次提交在 $DAYS 天前"
+          if [ "$DAYS" -lt 50 ]; then
+            exit 0
+          fi
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .mirror-keepalive
+          git add .mirror-keepalive
+          git commit -m "keepalive: 上游 50 天没有更新，避免定时任务被 GitHub 停用"
+          git push origin "HEAD:${TARGET_BRANCH}"
+
+      - name: 收尾自查
+        run: |
+          set -euo pipefail
+          echo "--- 最近提交 ---"
+          git log --oneline -3
+          echo "--- Release 列表 ---"
+          gh release list -R "$GITHUB_REPOSITORY" --limit 10 || true
