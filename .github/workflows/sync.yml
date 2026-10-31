@@ -109,7 +109,12 @@ jobs:
           git remote remove upstream 2>/dev/null || true
           git remote add upstream "https://github.com/${UPSTREAM}.git"
           git fetch upstream --tags --force
-          if git ls-remote --tags upstream | grep -q .; then
+
+          # 注意：这里千万别写成 `git ls-remote --tags upstream | grep -q .`。
+          # grep -q 命中第一行就退出，git ls-remote 收到 SIGPIPE 后返回 141，
+          # 配上 pipefail 整条管道就算失败 —— 结果是一个 tag 都不推，还不报错。
+          COUNT=$(git ls-remote --tags upstream | wc -l)
+          if [ "$COUNT" -gt 0 ]; then
             git push origin "+refs/tags/${TAG_PATTERN}:refs/tags/${TAG_PATTERN}" --force
           else
             echo "上游没有 tag"
@@ -153,7 +158,9 @@ jobs:
 
             ARGS=(--target "$TARGET_BRANCH" --title "$NAME" --notes-file /tmp/rel/notes.md)
             [ "$PRE" = "true" ] && ARGS+=(--prerelease)
-            [ "$TAG" = "$LATEST" ] && ARGS+=(--latest)
+            # 必须显式写死：不传 --latest 时 GitHub 会把「最后创建的那个」自动标成 latest，
+            # 一轮建多个 Release 时（首次同步、补历史）就会标到旧版本上。
+            if [ "$TAG" = "$LATEST" ]; then ARGS+=(--latest); else ARGS+=(--latest=false); fi
 
             shopt -s nullglob
             ASSETS=("$D"/*)
@@ -164,6 +171,13 @@ jobs:
             fi
             echo "已创建 $TAG（prerelease=$PRE）"
           done < /tmp/rel/tags.txt
+
+          # 兜底再钉一次 latest：上游最新版可能早就同步过了（这轮被跳过），
+          # 而 latest 标记必须始终指向它，不能指向这轮新建的那个。
+          if [ -n "$LATEST" ] && gh release view "$LATEST" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$LATEST" -R "$GITHUB_REPOSITORY" --latest
+            echo "已把 $LATEST 标记为 latest"
+          fi
 
       # ── 4. 保活 ───────────────────────────────────────────────
       # GitHub 会在仓库连续 60 天没有任何提交时自动停掉定时任务。
