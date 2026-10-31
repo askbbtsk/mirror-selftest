@@ -33,8 +33,10 @@ fork 会进入**同一个 fork network**。上游仓库一旦被 DMCA 处理，�
 | `TARGET_BRANCH` | 变量 | `main` | 本仓库接收同步的分支 |
 | `RELEASE_LIMIT` | 变量 | `6` | 同步最近多少个 Release；`0` = 只同步源码和 tag |
 | `TAG_PATTERN` | 变量 | `*` | 只同步匹配的 tag，例如 `v*` 可以跳过一堆无关的 tag |
+| `SYNC_TAGS` | 变量 | 开启 | 设成 `false` 完全跳过 tag 同步 |
 | `KEEPALIVE` | 变量 | 开启 | 设成 `false` 关掉保活提交 |
-| `UPSTREAM_TOKEN` | Secret | 空 | 上游是私有仓库，或者想避开匿名 API 限流时填一个 PAT |
+| `UPSTREAM_TOKEN` | Secret | 空 | 上游是私有仓库，或者想避开匿名 API 限流时填一个 PAT（只读就够） |
+| `SYNC_TOKEN` | Secret | 空 | 推 tag 用的 PAT，需要 `workflow` 权限。见下面「tag 为什么没同步」 |
 
 手动运行时的两个输入 `upstream` / `release_limit` 只对这一次生效，用来临时试别的仓库。
 
@@ -86,6 +88,19 @@ cron 是 **UTC**。常用写法：
 **提示 403 / rate limit？** 配 `UPSTREAM_TOKEN`（一个只读 `public_repo` 的 PAT 就够）。
 
 **Release 附件没下来？** 上游附件超过 2 GiB 单个上限，或者被 `gh release download` 的权限挡住；日志里会有具体报错。
+
+**tag 为什么没同步？** 日志里如果是这句：
+
+```
+refusing to allow a GitHub App to create or update workflow `.github/workflows/xxx.yml`
+without `workflows` permission
+```
+
+那是 GitHub 的硬限制：默认的 `GITHUB_TOKEN` **不允许创建或更新 `.github/workflows/` 下的文件**，而上游历史里只要带过 workflow 文件，它的 tag 就会被整条拒掉。
+
+解决：建一个 classic PAT（勾 `workflow` + `repo`），存到 secret `SYNC_TOKEN`。源码和 Release 不受这个限制，不配也照常同步，只是没有 git tag。
+
+> 顺带说：git tag 通常不是必需的。更新器比的是 Release 的 tag 名和版本号，Release 本身同步成功就够了。
 
 **能同步私有上游吗？** 能，`UPSTREAM_TOKEN` 填一个有该私有仓库读权限的 PAT。
 
