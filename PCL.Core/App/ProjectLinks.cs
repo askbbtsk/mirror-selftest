@@ -70,6 +70,15 @@ public static class ProjectLinks
     /// <summary>仓库的简体中文 README（项目说明、支持平台与许可条款都在这里）。</summary>
     public static string Readme => $"{Repository}/blob/main/README.md";
 
+    /// <summary>
+    /// Lunar Client 支持的完整说明（物料来源、账号与续期、IPC 支持矩阵、好友与私聊通道、已知限制）。
+    /// <para>
+    /// Lunar 那一块逻辑变化很快，页面上写死的说明必然过时——所以页面上只留一句概述，
+    /// 细节一律指向这份文档，改文档不用发版。
+    /// </para>
+    /// </summary>
+    public static string LunarDocs => $"{Repository}/blob/main/docs/LUNAR.md";
+
     public static string Wiki => $"{Repository}/wiki";
 
     /// <summary>GitHub API：仓库的 release 列表。</summary>
@@ -119,6 +128,19 @@ public static class ProjectLinks
 
     /// <summary>v1 清单文件名：单指针，老客户端只认这个，<b>永远不能删</b>。</summary>
     public const string ManifestV1FileName = "update.json";
+
+    /// <summary>
+    /// 公告文件名。和清单放在同一个仓库、同一个分支，所以走的是同一套多通道抢答。
+    /// <para>
+    /// 单独一个文件而不是塞进清单里：清单的解析器对形状很严（顶层多一个字符串值就判失败），
+    /// 而且清单只在仓库搬家时才改，公告却要随时能发。分开之后管理员编辑这个文件就等于
+    /// 发了一条公告，不用发版、不用动清单。
+    /// </para>
+    /// <para>
+    /// 文件不存在、内容写坏、网络不通，一律当作「没有公告」，不影响启动。
+    /// </para>
+    /// </summary>
+    public const string NoticeFileName = "notice.json";
 
     /// <summary>
     /// v2 清单文件名：多源 + 权重。

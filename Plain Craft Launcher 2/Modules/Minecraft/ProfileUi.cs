@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -404,6 +404,22 @@ public static class ProfileUi
         return (high | (value & (high - 1L))).ToString("X")[1..];
     }
 
+    /// <summary>
+    ///     这条档案是用什么方式登进来的：设备代码 / Refresh Token / Minecraft 令牌 / Cookie。
+    ///     同一个号可能有好几条档案，不标出来在列表里完全分不清。非正版档案返回空串。
+    /// </summary>
+    public static string GetLoginMethodLabel(McProfile profile)
+    {
+        if (profile.ProfileType != ProfileType.Microsoft) return string.Empty;
+        return ProfileService.NormalizeLoginMethod(profile.LoginMethod) switch
+        {
+            "token" => Lang.Text("Launch.Account.Method.Token"),
+            "refresh" => Lang.Text("Launch.Account.Method.Refresh"),
+            "cookie" => Lang.Text("Launch.Account.Method.Cookie"),
+            _ => Lang.Text("Launch.Account.Method.Device")
+        };
+    }
+
     public static string GetProfileInfo(McProfile profile)
     {
         var info = profile.ProfileType switch
@@ -413,6 +429,10 @@ public static class ProfileUi
             ProfileType.Microsoft => Lang.Text("Launch.Account.Type.Microsoft"),
             _ => Lang.Text("Launch.Account.Type.Offline")
         };
+        // 登录方式挂在「正版验证」后面，不往账号名那一行挤 —— 名字本来就长，
+        // 再拼个「（设备代码）」必然被省略号截掉，反而什么都看不全
+        var method = GetLoginMethodLabel(profile);
+        if (!string.IsNullOrEmpty(method)) info += $" · {method}";
         return string.IsNullOrWhiteSpace(profile.Description) ? info : $"{info}，{profile.Description}";
     }
 

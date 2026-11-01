@@ -29,7 +29,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-附加条款（传染性）
+附加条款（传染性） 
+Addendum(Copyleft)
 ------------------
 
 1. 传染性
@@ -54,6 +55,10 @@ SOFTWARE.
    本协议可能随时更新，且不提前通知；更新只对之后获取的版本生效，
    已经 fork 或已经分发的版本不受影响。
 
+7.二次修改发布说明
+   请你给这个仓库留一个位置在你的修改版本 可以不起眼但是要有
+
+8.请在仓库readme包括本项目源地址
 
 上游声明
 --------

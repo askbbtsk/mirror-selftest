@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -118,21 +119,68 @@ public class UpdatesManifestModel : IUpdateSource
 
     public VersionAnnouncementDataModel GetAnnouncementList()
     {
-        _EnsureLoaded(false);
-
-        // 公告只从权重最高的源取：这是「官方说法」，不该被镜像的旧公告盖掉
-        foreach (var model in _OrderedModels())
-            try
-            {
-                return model.GetAnnouncementList();
-            }
-            catch (Exception ex)
-            {
-                ModBase.Log(ex, $"[Update] {model.SourceName} 取公告失败", ModBase.LogLevel.Developer);
-            }
-
-        return new VersionAnnouncementDataModel { Content = [] };
+        // 公告来自清单仓库根目录的 notice.json：管理员改这个文件就等于发了一条公告，
+        // 不用发版、不用动清单。走的是和清单同一套多通道抢答，国内也能拉得到。
+        //
+        // 拉不到一律当「没有公告」：文件还没建、网络不通、内容写坏，都不该让启动变慢
+        // 或者弹个错误出来。公告是锦上添花，不是启动的前置条件。
+        try
+        {
+            // freshOnly：公告要「改完立刻生效」，不能走 jsDelivr 那种 12 小时缓存的镜像
+            return _ParseNotice(_FetchManifestText(ProjectLinks.NoticeFileName, freshOnly: true));
+        }
+        catch (Exception ex)
+        {
+            ModBase.Log(ex, "[Update] 拉取公告失败，本次不展示公告", ModBase.LogLevel.Developer);
+            return _EmptyAnnouncement();
+        }
     }
+
+    private static VersionAnnouncementDataModel _EmptyAnnouncement() => new() { Content = [] };
+
+    /// <summary>
+    /// 解析 notice.json。
+    /// <para>
+    /// 容错优先：允许注释、允许尾逗号、字段大小写不敏感。管理员是手改这个文件的，
+    /// 因为少个引号就让公告整条不显示（还看不出原因）是最没必要的坑。
+    /// </para>
+    /// <para>
+    /// 没有 <c>id</c> 的条目会被丢掉：去重全靠 id，缺了它这条公告每次启动都会弹一遍。
+    /// </para>
+    /// </summary>
+    private static VersionAnnouncementDataModel _ParseNotice(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return _EmptyAnnouncement();
+
+        try
+        {
+            var model = JsonSerializer.Deserialize<VersionAnnouncementDataModel>(body, NoticeJsonOptions);
+            if (model?.Content is null) return _EmptyAnnouncement();
+
+            var valid = model.Content
+                .Where(item => item is not null && !string.IsNullOrWhiteSpace(item.Id))
+                .ToList();
+
+            var dropped = model.Content.Count - valid.Count;
+            if (dropped > 0)
+                ModBase.Log($"[Update] 公告里有 {dropped} 条缺少 id，已忽略（没有 id 就无法去重）",
+                    ModBase.LogLevel.Developer);
+
+            return new VersionAnnouncementDataModel { Content = valid };
+        }
+        catch (Exception ex)
+        {
+            ModBase.Log(ex, "[Update] 公告内容无法解析，本次不展示公告", ModBase.LogLevel.Developer);
+            return _EmptyAnnouncement();
+        }
+    }
+
+    private static readonly JsonSerializerOptions NoticeJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
+    };
 
     public List<ModLoader.LoaderBase> GetDownloadLoader(UpdateChannel channel, UpdateArch arch, string output)
     {
@@ -257,17 +305,6 @@ public class UpdatesManifestModel : IUpdateSource
             ModBase.Log($"[Update] 已回退到单指针清单（{plan.V2Failure}），指向 {plan.Sources[0].Pointer}");
 
         return (plan.Sources.ToList(), models);
-    }
-
-    /// <summary>按权重降序取一份快照，供只该问一个源的地方用。</summary>
-    private List<UpdatesGitHubModel> _OrderedModels()
-    {
-        _EnsureLoaded(false);
-        lock (_lock)
-        {
-            // _models 与 _entries 同序（_Load 里按权重降序建的）
-            return _models.ToList();
-        }
     }
 
     /// <summary>
@@ -486,9 +523,10 @@ public class UpdatesManifestModel : IUpdateSource
     /// <summary>
     /// 拉清单仓库里的某个文件（update.json / updatev2.json）。
     /// </summary>
-    private static string _FetchManifestText(string fileName)
+    private static string _FetchManifestText(string fileName, bool freshOnly = false)
     {
-        return Task.Run(() => _FetchFirstText(_ManifestChannels(fileName), fileName)).GetAwaiter().GetResult();
+        return Task.Run(() => _FetchFirstText(_ManifestChannels(fileName, freshOnly), fileName))
+            .GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -578,13 +616,17 @@ public class UpdatesManifestModel : IUpdateSource
     /// <summary>
     /// 清单锚点的全部候选通道：每个锚点 × {Contents API, raw 直连, raw+各反代, jsDelivr}。
     /// </summary>
-    private static IEnumerable<(string Name, string Url, bool IsApi)> _ManifestChannels(string fileName)
+    /// <param name="freshOnly">
+    /// 只用准实时通道（跳过 jsDelivr）。给「改完就要立刻生效」的文件用，见 <see cref="_ChannelsFor"/>。
+    /// </param>
+    private static IEnumerable<(string Name, string Url, bool IsApi)> _ManifestChannels(
+        string fileName, bool freshOnly = false)
     {
         var anchors = ProjectLinks.ServiceAnchors();
         var multiAnchor = anchors.Count > 1;
 
         foreach (var (owner, repo) in anchors)
-            foreach (var channel in _ChannelsFor(owner, repo, fileName, multiAnchor))
+            foreach (var channel in _ChannelsFor(owner, repo, fileName, multiAnchor, freshOnly))
                 yield return channel;
     }
 
@@ -598,19 +640,26 @@ public class UpdatesManifestModel : IUpdateSource
     /// 既然是并发抢答，顺序只影响日志可读性，不影响速度。
     /// 多个锚点时通道名前面会带上 <c>owner/repo</c>，否则日志里分不清是哪个锚点回来的。
     /// </para>
+    /// <para>
+    /// <b>jsDelivr 有长缓存</b>（对 GitHub 的路径默认 12 小时），而抢答是「谁先回用谁」，
+    /// 于是它命中缓存时反而最快、把旧内容顶上来。清单文件无所谓（只在搬家时变），
+    /// 但公告是「改完就该立刻看到」的东西，所以公告走 <paramref name="freshOnly"/> 跳过它。
+    /// </para>
     /// </summary>
     private static IEnumerable<(string Name, string Url, bool IsApi)> _ChannelsFor(
-        string owner, string repo, string fileName, bool tagWithAnchor)
+        string owner, string repo, string fileName, bool tagWithAnchor, bool freshOnly = false)
     {
         var tag = tagWithAnchor ? $"{owner}/{repo} " : string.Empty;
         var raw = ProjectLinks.ManifestRaw(owner, repo, fileName);
 
-        // Contents API 和取 Release 用同一个域名，常常是最快的那条
+        // Contents API 和取 Release 用同一个域名，常常是最快的那条，而且不吃 CDN 缓存
         yield return ($"{tag}Contents API", ProjectLinks.ManifestApi(owner, repo, fileName), true);
         yield return ($"{tag}raw 直连", raw, false);
 
         foreach (var proxy in UpdatesGitHubModel.DownloadProxies)
             yield return ($"{tag}{_ProxyName(proxy)}", proxy + raw, false);
+
+        if (freshOnly) yield break;
 
         yield return ($"{tag}jsDelivr", ProjectLinks.ManifestMirror(owner, repo, fileName), false);
     }
