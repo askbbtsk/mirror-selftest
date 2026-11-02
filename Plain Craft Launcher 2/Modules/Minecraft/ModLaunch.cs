@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
@@ -8,6 +8,7 @@ using PCL.Core.App;
 using PCL.Core.App.Localization;
 using PCL.Core.Minecraft;
 using PCL.Core.Minecraft.Launch.Utils;
+using PCL.Core.Utils.OS;
 using PCL.Core.Utils;
 using PCL.Core.Utils.OS;
 using PCL.Core.Utils.Secret;
@@ -233,7 +234,9 @@ public static class ModLaunch
     /// </summary>
     public static void McLaunchLog(string text)
     {
-        text = McLogFilter.FilterUserName(McLogFilter.FilterAccessToken(text, '*'), '*');
+        text = McLogFilter.FilterAccessToken(text, '*');
+        // 用户文件夹名默认打码（个性化里可关）：启动日志里全是 C:\Users\xxx\... 这种路径
+        text = UserPathMasker.Apply(text);
         ModBase.RunInUi(() =>
             ModMain.frmLaunchRight.LabLog.Text += "\r\n" + "[" + TimeUtils.GetTimeNow() + "] " + text);
         ModBase.Log("[Launch] " + text);

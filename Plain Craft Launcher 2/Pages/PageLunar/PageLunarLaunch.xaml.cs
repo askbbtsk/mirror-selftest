@@ -12,6 +12,7 @@ using PCL.Core.App.Localization;
 using PCL.Core.App.Lunar;
 using PCL.Core.App.Lunar.Social;
 using PCL.Core.UI;
+using PCL.Core.Utils.OS;
 
 namespace PCL;
 
@@ -92,13 +93,14 @@ public partial class PageLunarLaunch
         RefreshAccountHint();
 
         // 运行中显示进程真正用的目录；没运行就显示「下次会用哪个」
-        LabGameDir.Text = ModLunar.IsRunning && !string.IsNullOrWhiteSpace(ModLunar.GameDirectory)
+        // 这三行是直接赋路径（没走 Lang.Text），显示前同样要按设置打码
+        LabGameDir.Text = UserPathMasker.Apply(ModLunar.IsRunning && !string.IsNullOrWhiteSpace(ModLunar.GameDirectory)
             ? ModLunar.GameDirectory
-            : _gameDirPreview;
-        LabCacheDir.Text = LunarClientService.MultiverDirectory(ModLunar.LunarRoot);
+            : _gameDirPreview);
+        LabCacheDir.Text = UserPathMasker.Apply(LunarClientService.MultiverDirectory(ModLunar.LunarRoot));
         LabJava.Text = string.IsNullOrWhiteSpace(ModLunar.JavaPath)
             ? Lang.Text("Lunar.Field.JavaAuto")
-            : ModLunar.JavaPath;
+            : UserPathMasker.Apply(ModLunar.JavaPath);
 
         RefreshButtons();
     }
