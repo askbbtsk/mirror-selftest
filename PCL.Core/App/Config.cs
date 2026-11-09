@@ -849,6 +849,17 @@ public static partial class Config
         /// </summary>
         [ConfigItem<int>("LaunchArgumentWindowWidth", 854, ConfigSource.Local)] public partial int GameWindowWidth { get; set; }
 
+        /// <summary>Synchronize selected vanilla options across instances.</summary>
+        [ConfigItem<bool>("LaunchPersonalOptionsSync", false, ConfigSource.Local)] public partial bool PersonalOptionsSync { get; set; }
+        [ConfigItem<bool>("LaunchPersonalOptionsKeys", true, ConfigSource.Local)] public partial bool PersonalOptionsKeys { get; set; }
+        [ConfigItem<bool>("LaunchPersonalOptionsMouse", true, ConfigSource.Local)] public partial bool PersonalOptionsMouse { get; set; }
+        [ConfigItem<bool>("LaunchPersonalOptionsView", true, ConfigSource.Local)] public partial bool PersonalOptionsView { get; set; }
+        [ConfigItem<bool>("LaunchPersonalOptionsAccessibility", true, ConfigSource.Local)] public partial bool PersonalOptionsAccessibility { get; set; }
+        [ConfigItem<bool>("LaunchPersonalOptionsAudio", false, ConfigSource.Local)] public partial bool PersonalOptionsAudio { get; set; }
+
+        /// <summary>Automatically back up a quick-play world around game sessions.</summary>
+        [ConfigItem<bool>("LaunchDeleteToRecycleBin", true, ConfigSource.Local)] public partial bool DeleteToRecycleBin { get; set; }
+
         /// <summary>
         /// 游戏窗口高度。
         /// </summary>

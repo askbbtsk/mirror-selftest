@@ -1,4 +1,4 @@
-﻿<!-- Formatted by xaml-lang-formatter at 2026-06-28T17:16:52. -->
+<!-- Formatted by xaml-lang-formatter at 2026-06-28T17:16:52. -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -827,7 +827,7 @@
     <sys:String x:Key="Instance.Export.StartExport">開始匯出</sys:String>
     <sys:String x:Key="Instance.Export.Task.CopyContent">複製匯出內容</sys:String>
     <sys:String x:Key="Instance.Export.Task.CreateArchive">建立壓縮檔</sys:String>
-    <sys:String x:Key="Instance.Export.Task.DownloadPclRelease">下載 PCL Lite 正式版</sys:String>
+    <sys:String x:Key="Instance.Export.Task.PackagePclLite">打包目前的 PCL Lite</sys:String>
     <sys:String x:Key="Instance.Export.Task.FetchFileInfo">連線取得檔案資訊</sys:String>
     <sys:String x:Key="Instance.Export.ZipFilter">壓縮檔案(*.zip)|*.zip</sys:String>
 
@@ -1008,6 +1008,54 @@
     <sys:String x:Key="Instance.Overall.Info.LoadInstanceInfoTask">取得實例資訊</sys:String>
     <sys:String x:Key="Instance.Overall.Info.LoadModpackInfoTask">取得可能的模組包資訊</sys:String>
     <sys:String x:Key="Instance.Overall.Info.Loading">正在取得資訊</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Card.Title">模組包更新</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Card.Description">檢查模組包的新版本，預覽作者檔案的新增、更新和移除，並預設保留已修改的個人檔案。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Card.Button">檢查更新</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Local.Button">從本機檔案更新</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Local.Title">確認本機模組包來源</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Local.UnverifiedMessage">啟動器無法驗證所選壓縮檔是否屬於目前模組包。繼續後會將該檔案作為目前模組包的新版本，並保留目前市集專案關聯；請只選擇可信且確認屬於同一模組包的檔案。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Task">更新模組包</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Task.Download">下載模組包版本</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.SelectVersion.Title">選擇模組包版本</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.IsolationRequired">此模組包未啟用實例隔離。為避免影響其他實例，目前無法安全更新。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.GameRunning">請先關閉執行中的 Minecraft，再更新模組包。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.NoBaseline">沒有此實例的模組包來源記錄。請先重新安裝支援的模組包版本，才能使用差異更新。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.ProjectUnavailable">無法從平台取得此模組包專案。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.NoReleases">平台沒有可用的模組包檔案。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.StageFailed">準備新版本模組包失敗。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.BaselineMissing">新版本未建立可驗證的來源檔案清單。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Error.SourceMismatch">新舊版本的模組包來源不一致，已取消更新。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Preview.Title">確認模組包更新</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Preview">將安裝／更新 {0} 個作者檔案、移除 {1} 個作者檔案，並保留 {2} 個已修改的個人檔案。繼續前會建立環境還原點。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Preview.Preserve">保留個人修改</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Preview.UseAuthor">使用作者版本</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Hint.AlreadyCurrent">模組包檔案已是最新，無需更新。</sys:String>
+    <sys:String x:Key="Instance.PackUpdate.Hint.Success">模組包更新完成，已建立還原點。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Title">實例還原點</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Description">還原點會保存實例環境檔案；還原時保留 saves 存檔與 PCL Lite 本機資料，其餘實例檔案會依還原點取代。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Create">建立還原點</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Empty">目前沒有還原點。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Item">{0} · {1} 個檔案 · {2}</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Restore">還原</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Confirm">要還原至 {0} 嗎？實例環境檔案將被取代，存檔不會變更。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Created">已建立還原點。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Restored">已還原實例還原點。</sys:String>
+<sys:String x:Key="Instance.RestorePoint.Delete">刪除還原點</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Delete.Confirm">要刪除 {0} 的還原點嗎？此操作無法復原。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Deleted">已刪除還原點。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Failed">還原點操作失敗，請查看記錄。</sys:String>
+<sys:String x:Key="Instance.RestorePoint.CrashRecovery.Title">當機後的環境變更</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.CrashRecovery.Message">實例「{0}」異常結束。與啟動前還原點相比：新增 {1}、修改 {2}、刪除 {3} 個環境檔案。還原會保留 saves 存檔和 PCL Lite 本機資料，並還原其他環境檔案。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.CrashRecovery.Restore">還原啟動前環境</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare">比較目前環境</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.Title">還原點差異</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.Empty">目前環境與此還原點沒有差異。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.Summary">新增 {0}、修改 {1}、刪除 {2} 個檔案。</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.Entry">{0}：{1}</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.More">另有 {0} 個差異</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.Added">新增</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.Modified">修改</sys:String>
+    <sys:String x:Key="Instance.RestorePoint.Compare.Removed">刪除</sys:String>
     <sys:String x:Key="Instance.Overall.Info.ModpackVersion">模組包版本</sys:String>
     <sys:String x:Key="Instance.Overall.Info.Title">實例資訊</sys:String>
 
@@ -1020,6 +1068,13 @@
     <sys:String x:Key="Instance.Overall.Manage.RepairFiles">補全檔案</sys:String>
     <sys:String x:Key="Instance.Overall.Manage.RepairFiles.ToolTip">校驗實例依賴檔案是否完整，並重新下載 Assets 索引與缺失、校驗失敗的檔案。&#xA;若遊戲缺失音效，請嘗試此項。</sys:String>
     <sys:String x:Key="Instance.Overall.Manage.TestGame">測試遊戲</sys:String>
+<sys:String x:Key="Instance.Overall.Manage.TestCopy">建立測試副本</sys:String>
+    <sys:String x:Key="Instance.Overall.Manage.TestCopy.IsolationRequired">請先啟用此實例的版本隔離，再建立測試副本。</sys:String>
+    <sys:String x:Key="Instance.Overall.Manage.TestCopy.Name.Title">建立測試副本</sys:String>
+    <sys:String x:Key="Instance.Overall.Manage.TestCopy.Name.Message">輸入測試副本名稱。會複製此實例的遊戲檔案與存檔，並保留原實例不變；需要額外磁碟空間。</sys:String>
+    <sys:String x:Key="Instance.Overall.Manage.TestCopy.Confirm">將複製至「{0}」。此操作會佔用磁碟空間，是否繼續？</sys:String>
+    <sys:String x:Key="Instance.Overall.Manage.TestCopy.Success">測試副本「{0}」已建立。</sys:String>
+    <sys:String x:Key="Instance.Overall.Manage.TestCopy.Failed">建立測試副本失敗，請查看記錄。</sys:String>
     <sys:String x:Key="Instance.Overall.Manage.Title">進階管理</sys:String>
 
     <!-- Instance.Overall.Repair -->
@@ -1229,6 +1284,17 @@
     <sys:String x:Key="Instance.Saves.Left.Refreshing">重新整理中……</sys:String>
     <sys:String x:Key="Instance.Saves.Left.SwitchFailed">切換分頁失敗（ID {0}）</sys:String>
     <sys:String x:Key="Instance.Saves.Left.UnknownSubPage">未知的實例設定子畫面種類：{0}</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Card.Title">世界備份：{0}</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Button.Tooltip">查看此世界的備份</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Create">立即備份</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Empty">此世界尚無備份。</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Restore">還原備份</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Delete">移除備份</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Created">已建立世界備份。</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.Restored">已還原世界備份。還原前的世界副本也已保存。</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.GameRunning">請先關閉此實例正在執行的 Minecraft，再操作世界備份。</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.OperationFailed">世界備份操作失敗，請查看記錄。</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.ConfirmRestore">要將此世界還原到備份時間點嗎？目前世界內容將被取代，請先手動備份需要保留的進度。</sys:String>
     <sys:String x:Key="Instance.Saves.ListTitle">存檔清單</sys:String>
     <sys:String x:Key="Instance.Saves.LoadListFailed">載入存檔清單失敗</sys:String>
     <sys:String x:Key="Instance.Saves.OpenFileLocation">開啟檔案位置</sys:String>
@@ -2262,6 +2328,16 @@ Cookie 可以直接貼擴充功能匯出的 cookies.txt（Netscape 格式）整�
     <sys:String x:Key="Minecraft.Launch.Login.Microsoft.Underage.Message">該帳戶年齡不足，你需要先修改出生日期，然後才能登入。&#xA;該帳戶目前填寫的年齡是否在 13 歲以上？</sys:String>
     <sys:String x:Key="Minecraft.Launch.Login.Microsoft.XboxNotRegistered">你尚未註冊 Xbox 帳戶，請在註冊後再登入。</sys:String>
 
+    <sys:String x:Key="Minecraft.Launch.Dependency.Title">模組前置檢查</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.Message">實例「{0}」有尚未滿足的必要模組相依項：&#xA;&#xA;{1}&#xA;&#xA;可以取消啟動，或仍然嘗試啟動。若前置模組已安裝但遭停用，可以先啟用相符版本。</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.Entry">{0} → {1}（需要 {2}；{3}）</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.More">另有 {0} 項</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.Enable">啟用前置</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.Continue">仍然啟動</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.EnableFailed">無法啟用：{0}</sys:String>
+<sys:String x:Key="Minecraft.Launch.Dependency.SearchTask">搜尋模組相依項：{0}</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.DownloadTask">下載必要模組相依項</sys:String>
+    <sys:String x:Key="Minecraft.Launch.Dependency.DownloadPrepareFailed">部分必要相依項無法準備下載。可以繼續啟動或取消。</sys:String>
     <!-- Minecraft.Launch.Precheck -->
 
     <sys:String x:Key="Minecraft.Launch.Precheck.AuthServerMismatch">目前檔案使用的第三方驗證伺服器與實例要求使用的不一致，請使用符合要求的檔案啟動遊戲！</sys:String>
@@ -3894,4 +3970,42 @@ Lunar 工作階段已於 {2} 過期，進遊戲後由 IPC 續期</sys:String>
     <sys:String x:Key="Lunar.Ipc.AddAccountProvided">已把 PCL 目前登入的帳號交給遊戲，回到遊戲即可繼續。</sys:String>
     <sys:String x:Key="Lunar.Ipc.LaunchGame">遊戲請求切換到 {0}。請在啟動頁確認版本後重新啟動。</sys:String>
     <sys:String x:Key="Lunar.Ipc.LaunchUnknown">（未指定版本）</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Title">跨版本個人遊戲設定</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Enabled">同步個人遊戲設定</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Enabled.ToolTip">啟動前將個人設定套用至目前實例，結束遊戲後儲存變更，供其他實例使用。</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Description">只同步勾選的原版設定類別；模組和整合包自訂的 options.txt 項目會保留在各自實例。關閉後不再套用或擷取設定。</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Keys">按鍵綁定</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Mouse">滑鼠設定</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.View">視野與畫面效果</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Accessibility">輔助功能</sys:String>
+    <sys:String x:Key="Setup.Launch.PersonalOptions.Audio">音量設定</sys:String>
+    <sys:String x:Key="Setup.Misc.Delete.Title">檔案刪除</sys:String>
+    <sys:String x:Key="Setup.Misc.Delete.Recycle">刪除時移至 Windows 資源回收筒</sys:String>
+    <sys:String x:Key="Setup.Misc.Delete.Recycle.ToolTip">預設開啟。關閉後直接刪除；按住 Shift 也可直接刪除。實例還原點一律直接刪除，無法找回。</sys:String>
+    <sys:String x:Key="Instance.Backup.Reason.Normal">正常備份</sys:String>
+    <sys:String x:Key="Instance.Backup.Reason.Manual">手動備份</sys:String>
+    <sys:String x:Key="Instance.Backup.Reason.ManualRestorePoint">手動還原點</sys:String>
+    <sys:String x:Key="Instance.Backup.ItemDetail">{0} · {1} 個檔案 · {2:N0} B</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.DeletedToWindowsRecycleBin">備份已移至 Windows 資源回收筒。</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.DeletedPermanently">備份已永久刪除。</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.ConfirmDelete.Windows">將這份備份移至 Windows 資源回收筒？</sys:String>
+    <sys:String x:Key="Instance.Saves.Backup.ConfirmDelete.Permanent">永久刪除這份備份？此操作無法復原。</sys:String>
+    <sys:String x:Key="Instance.Saves.DeletedPermanently">存檔已永久刪除。</sys:String>
+    <sys:String x:Key="Setup.Ui.Homepage.Preset.Welcome">PCL Lite 歡迎頁</sys:String>
+    <sys:String x:Key="Setup.Ui.Homepage.Preset.Performance">PCL Lite 效能狀態頁</sys:String>
+    <sys:String x:Key="Instance.Export.Bundle.Title">附帶啟動器</sys:String>
+    <sys:String x:Key="Instance.Export.Bundle.None">不附帶啟動器</sys:String>
+    <sys:String x:Key="Instance.Export.Bundle.Lite">附帶完整 PCL Lite（目前程式）</sys:String>
+    <sys:String x:Key="Instance.Export.Bundle.Light">附帶精簡 PCL Light（匯出時下載）</sys:String>
+    <sys:String x:Key="Instance.Export.Bundle.Architecture">PCL Light 目標架構</sys:String>
+    <sys:String x:Key="Instance.Export.Bundle.DownloadLight">下載並驗證 PCL Light</sys:String>
+    <sys:String x:Key="Instance.Export.Java.Include">打包實例目錄內的 Java</sys:String>
+    <sys:String x:Key="Instance.Export.Java.Missing">實例目錄內沒有可打包的有效 Java；不會下載或打包系統 Java。</sys:String>
+    <sys:String x:Key="Instance.Export.Isolation.Title">安裝後的版本隔離</sys:String>
+    <sys:String x:Key="Instance.Export.Isolation.On">開啟版本隔離（建議）</sys:String>
+    <sys:String x:Key="Instance.Export.Isolation.Off">關閉版本隔離（使用共用遊戲目錄）</sys:String>
+    <sys:String x:Key="Instance.Export.Config.ModeIgnored">已讀取匯出設定；精簡整合包模式不適用於完整 PCL Lite，未套用此設定。</sys:String>
+    <sys:String x:Key="Instance.Export.Java.InstanceRelative">實例內 Java：{0}</sys:String>
+    <sys:String x:Key="Instance.Export.Java.Incompatible">打包的 Java 不符合目前實例需求，或與所選 Light 架構不同。</sys:String>
+    <sys:String x:Key="Instance.Export.Bundle.LightIsolation">PCL Light 目前發布版匯入時會強制開啟版本隔離。需要關閉隔離時，請選擇完整 Lite 或不附帶啟動器。</sys:String>
 </ResourceDictionary>
