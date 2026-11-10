@@ -93,15 +93,16 @@ public class HashCache : IDisposable
     private Task<string> _GetHashWithPending(string filePath, IHashProvider provider, string algoName)
     {
         var computeKey = $"{_dbPath}|{filePath}:{algoName}";
-        return _FileHashComputePending.GetOrAdd(computeKey, key =>
+        var computeTask = _FileHashComputePending.GetOrAdd(computeKey,
+            _ => _GetHashAsync(filePath, provider, algoName));
+        // Register only after GetOrAdd publishes the task: a synchronous missing-file failure
+        // must not remove an absent key and then leave its faulted task cached forever.
+        _ = computeTask.ContinueWith(completed =>
         {
-            var computeTask = _GetHashAsync(filePath, provider, algoName);
-            _ = computeTask.ContinueWith(t =>
-            {
-                _FileHashComputePending.TryRemove(key, out _);
-            }, TaskContinuationOptions.ExecuteSynchronously);
-            return computeTask;
-        });
+            ((System.Collections.Generic.ICollection<System.Collections.Generic.KeyValuePair<string, Task<string>>>)
+                _FileHashComputePending).Remove(new(computeKey, completed));
+        }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        return computeTask;
     }
 
     private async Task<string> _GetHashAsync(string filePath, IHashProvider provider, string algoName)
@@ -125,9 +126,13 @@ public class HashCache : IDisposable
                 {
                     var hash = _GetHashFromEntry(cached, algoName);
                     if (hash != null)
+                    {
+                        ValidateFileFingerprint(fullPath, fileSize, lastWrite);
                         return hash;
+                    }
 
                     var computedHash = await _ComputeHashAsync(fullPath, provider).ConfigureAwait(false);
+                    ValidateFileFingerprint(fullPath, fileSize, lastWrite);
                     await _InsertOrUpdateHashAsync(fullPath, fileSize, lastWrite, algoName, computedHash).ConfigureAwait(false);
                     return computedHash;
                 }
@@ -138,6 +143,7 @@ public class HashCache : IDisposable
             }
 
             var computed = await _ComputeHashAsync(fullPath, provider).ConfigureAwait(false);
+            ValidateFileFingerprint(fullPath, fileSize, lastWrite);
             await _InsertOrUpdateHashAsync(fullPath, fileSize, lastWrite, algoName, computed).ConfigureAwait(false);
             return computed;
         }
@@ -146,12 +152,32 @@ public class HashCache : IDisposable
             await _DeleteCacheEntryAsync(fullPath).ConfigureAwait(false);
             throw;
         }
+        catch (IOException)
+        {
+            await _DeleteCacheEntryAsync(fullPath).ConfigureAwait(false);
+            throw;
+        }
     }
 
     private static async Task<string> _ComputeHashAsync(string fullPath, IHashProvider provider)
     {
-        using FileStream fs = new(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return (await provider.ComputeHashAsync(fs).ConfigureAwait(false)).ToHexString();
+        var before = new FileInfo(fullPath);
+        var size = before.Length;
+        var lastWrite = before.LastWriteTimeUtc.ToString("O");
+        using FileStream fs = new(fullPath, FileMode.Open, FileAccess.Read,
+            FileShare.Read | FileShare.Write | FileShare.Delete);
+        var hash = (await provider.ComputeHashAsync(fs).ConfigureAwait(false)).ToHexString();
+        ValidateFileFingerprint(fullPath, size, lastWrite);
+        return hash;
+    }
+
+    private static void ValidateFileFingerprint(string path, long size, string lastWrite)
+    {
+        var current = new FileInfo(path);
+        current.Refresh();
+        if (!current.Exists) throw new FileNotFoundException("File was removed during hashing.", path);
+        if (current.Length != size || current.LastWriteTimeUtc.ToString("O") != lastWrite)
+            throw new IOException("File changed during hashing; its result was not cached: " + path);
     }
 
     private async Task<CacheEntry?> _FindCacheEntryAsync(string fullPath)

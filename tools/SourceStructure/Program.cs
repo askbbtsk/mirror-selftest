@@ -123,13 +123,14 @@ internal static partial class Program
     };
 
     private sealed record Observations(Dictionary<string, string> Members, Dictionary<string, List<string>> Initializers,
-        Dictionary<string, MethodDeclarationSyntax> Methods);
+        Dictionary<string, MethodDeclarationSyntax> Methods, Dictionary<string, string> Sources);
 
     private static Observations Observe(IEnumerable<(string Path, string Text)> sources)
     {
         var members = new Dictionary<string, string>(StringComparer.Ordinal);
         var initializers = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         var methods = new Dictionary<string, MethodDeclarationSyntax>(StringComparer.Ordinal);
+        var sourcesByMember = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var (path, text) in sources)
         {
             var root = Parse(text);
@@ -160,6 +161,7 @@ internal static partial class Program
                 {
                     var key = name + "::" + member.Kind() + "::" + MemberName(member);
                     if (!members.TryAdd(key, Tokens(member))) throw new InvalidDataException("Duplicate member: " + key);
+                    sourcesByMember[key] = path.Replace('\\', '/');
                     if (member is MethodDeclarationSyntax method) methods[key] = method;
                     if (member is FieldDeclarationSyntax field && field.Declaration.Variables.Any(variable => variable.Initializer is not null)
                         || member is PropertyDeclarationSyntax { Initializer: not null }
@@ -171,7 +173,7 @@ internal static partial class Program
                 }
             }
         }
-        return new(members, initializers, methods);
+        return new(members, initializers, methods, sourcesByMember);
     }
 
     private static int Verify()
@@ -182,11 +184,13 @@ internal static partial class Program
             .OrderBy(path => path.Replace('\\', '/'), StringComparer.Ordinal).ToArray();
         var current = Observe(files.Select(path => (path, Current(path))));
         var errors = new List<string>();
+        VerifySharedJavaRules(old, current, errors);
         var relocationPath = Path.Combine("tools", "SourceStructure", "relocations.json");
         var relocations = File.Exists(relocationPath) ? JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(relocationPath))! : new();
         foreach (var pair in old.Members)
             if (!current.Members.TryGetValue(pair.Key, out var value)) errors.Add("Missing member: " + pair.Key);
-            else if (pair.Value != value && !IsApprovedChange(pair.Key, pair.Value, value))
+            else if (pair.Value != value && !IsApprovedChange(pair.Key, pair.Value, value)
+                     && !IsReviewedFeatureChange(pair.Key, current))
             {
                 if (!relocations.TryGetValue(pair.Key, out var service) || !old.Methods.TryGetValue(pair.Key, out var method)
                     || Tokens(Forward(method, service.Split('.').Last())) != value
@@ -195,7 +199,9 @@ internal static partial class Program
                     errors.Add("Changed member: " + pair.Key);
             }
         foreach (var pair in old.Initializers)
-            if (!current.Initializers.TryGetValue(pair.Key, out var value) || !pair.Value.SequenceEqual(value)) errors.Add("Initializer order changed: " + pair.Key);
+            if (!current.Initializers.TryGetValue(pair.Key, out var value)
+                || !pair.Value.SequenceEqual(value.Where(key => pair.Value.Contains(key, StringComparer.Ordinal))))
+                errors.Add("Initializer order changed: " + pair.Key);
         foreach (var error in errors) Console.Error.WriteLine(error);
         Console.WriteLine($"Compared {old.Members.Count} existing type/member contracts with baseline {Baseline}; {errors.Count} differences.");
         return errors.Count == 0 ? 0 : 1;

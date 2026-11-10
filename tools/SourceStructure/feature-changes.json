@@ -1,0 +1,256 @@
+[
+  {
+    "SourcePath": "PCL.Core/Minecraft/Packs/PackExportContent.cs",
+    "Sha256": "FAA72B48588BAC80115FF3C6827C489F9C0C6669B190C17D1A5EAB8855F78870",
+    "Members": [
+      "PCL.Core.Minecraft.Packs.PackExportContent::MethodDeclaration::IsInternalPath(string relativePath)",
+      "PCL.Core.Minecraft.Packs.PackExportContent::MethodDeclaration::CopyTree(string source, string destination, CancellationToken token = default)"
+    ],
+    "Reason": "Stage A: exclude reserved PCL/Enhancements sidecars from whole-instance, PCL-subtree and explicitly selected directory exports. Ordinary user Enhancements directories remain eligible. Covered by EnhancementExportTests."
+  },
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLaunchDependencyPrecheck.cs",
+  "Sha256": "3902845F8B67B9AE5C94418A10F32E2B3E76B4035CE052FAE7EA651279BB5914",
+  "Members": [
+    "PCL.ModLaunchDependencyPrecheck::MethodDeclaration::Confirm(McInstance instance, bool isScriptExport)",
+    "PCL.ModLaunchDependencyPrecheck::MethodDeclaration::Scan(McInstance instance, string modsPath)",
+    "PCL.ModLaunchDependencyPrecheck::MethodDeclaration::BuildDetails(List<Issue> issues)"
+  ],
+  "Reason": "Plan stage A: optional dependency review, independently switched evidence-based loader annotations and native launch settings; dedicated compatibility tests. Exact source reviewed against snapshot-2."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLocalComp.LocalCompFile.Loading.Init.cs",
+  "Sha256": "96B846E6DF641FC53A5C38CD32264DFB072BC56AB89F2F7551EFA091F1ABEE5D",
+  "Members": [
+    "PCL.ModLocalComp+LocalCompFile::MethodDeclaration::Init()",
+    "PCL.ModLocalComp+LocalCompFile::MethodDeclaration::LoadCore()"
+  ],
+  "Reason": "Plan stage A: optional dependency review, independently switched evidence-based loader annotations and native launch settings; dedicated compatibility tests. Exact source reviewed against snapshot-2."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLocalComp.LocalCompFile.LoadState.MarkLoaded.cs",
+  "Sha256": "96FE716E69584768D5096F1DADDD26351B86D9A939E65B39A1EEFE8BC46C1831",
+  "Members": [
+    "PCL.ModLocalComp+LocalCompFile::MethodDeclaration::CopyLoadedStateFrom(LocalCompFile other)"
+  ],
+  "Reason": "Plan stage A: optional dependency review, independently switched evidence-based loader annotations and native launch settings; dedicated compatibility tests. Exact source reviewed against snapshot-2."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/MyLocalModItem.xaml.cs",
+  "Sha256": "75BF3074800C552591160DED3C1A6D12A858847B47F960B60CC1CD7CF445C137",
+  "Members": [
+    "PCL.MyLocalCompItem::MethodDeclaration::Refresh()"
+  ],
+  "Reason": "Plan stage A: optional dependency review, independently switched evidence-based loader annotations and native launch settings; dedicated compatibility tests. Exact source reviewed against snapshot-2."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/PageInstanceCompResource.Presentation.LoadUIFromLoaderOutput.cs",
+  "Sha256": "A151D4DFF6A4E9101CEA81E1995B4D94546496FCD52A52D03E5FB077EF74CF50",
+  "Members": [
+    "PCL.PageInstanceCompResource::MethodDeclaration::LoadUIFromLoaderOutput()",
+    "PCL.PageInstanceCompResource::MethodDeclaration::BuildLocalCompItem(ModLocalComp.LocalCompFile entry)"
+  ],
+  "Reason": "Plan stage A: optional dependency review, independently switched evidence-based loader annotations and native launch settings; dedicated compatibility tests. Exact source reviewed against snapshot-2."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageSetup/PageSetupLaunch.xaml.cs",
+  "Sha256": "8824389DBBCA63B61F1429976D6CD93AFDB9195BDAB3E2BDFA3E65959EAA92F4",
+  "Members": [
+    "PCL.PageSetupLaunch::MethodDeclaration::Reload()"
+  ],
+  "Reason": "Plan stage A: optional dependency review, independently switched evidence-based loader annotations and native launch settings; dedicated compatibility tests. Exact source reviewed against snapshot-2."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.LaunchCoordinator.McLaunchOptions.cs",
+  "Sha256": "21B9893197640818EA18F426951615D4BF1493045A16344C8D35F14F49463576",
+  "Members": ["PCL.ModLaunch::MethodDeclaration::McLaunchStart(ModLoader.LoaderTask<McLaunchOptions, object> loader)"],
+  "Reason": "Stage B: coordinate launch and explicit copies using a shared nonblocking process-safe file lease; non-sharing storage failures retain ordinary launch behavior."
+}
+,
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Lunar/ModLunar.ConfigurationAndAccountSelection.cs",
+  "Sha256": "77CB9F93C282DFD35EDFBEAE994C0D04ADA0746E12F4FDFAEDE578E63B4AB6CB",
+  "Members": [
+    "PCL.ModLunar::MethodDeclaration::Launch()",
+    "PCL.ModLunar::MethodDeclaration::Stop()",
+    "PCL.ModLunar::MethodDeclaration::StopCore(Process process)"
+  ],
+  "Reason": "Reported Lunar old-session exit/output/stop callbacks must not clear replacement process or IPC. Session-generation ownership and deferred UI delivery; regression replay tests."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Lunar/ModLunar.SocialAndSession.cs",
+  "Sha256": "7EEFB72BA634C5F6F7AB1E1DE62F498290AF7DA0F61A9C09B933602877F8F68A",
+  "Members": [
+    "PCL.ModLunar::MethodDeclaration::LaunchCoreAsync(string gameDirectory)",
+    "PCL.ModLunar::MethodDeclaration::WatchFirstWindow(Process process, string gameDirectory, DateTime startedAt, string subVersion,\n        bool vanillaReady)"
+  ],
+  "Reason": "Reported Lunar old-session exit/output/stop callbacks must not clear replacement process or IPC. Session-generation ownership and deferred UI delivery; regression replay tests."
+}
+,
+{
+  "SourcePath": "PCL.Core/Minecraft/Instances/InstanceTestCopyService.cs",
+  "Sha256": "72AA9BDE427877168705ED6902509C109C27A1E06854B1E869BCD8CE9D853764",
+  "Members": [
+    "PCL.Core.Minecraft.Instances.InstanceTestCopyService::MethodDeclaration::Create(string sourceInstanceDirectory, string destinationInstanceDirectory, string sourceName, string destinationName)"
+  ],
+  "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
+},
+{
+  "SourcePath": "PCL.Core/Minecraft/PersonalOptions/PersonalOptionsSyncService.cs",
+  "Sha256": "8ACBA85FCCF008EFD138851C537F6126B63629E43BBDC39E461D6DD0ABC4BFC3",
+  "Members": [
+    "PCL.Core.Minecraft.PersonalOptions.PersonalOptionsSyncService::MethodDeclaration::SaveProfile(string path, PersonalOptionsProfile profile)",
+    "PCL.Core.Minecraft.PersonalOptions.PersonalOptionsSyncService::MethodDeclaration::PrepareSession(string optionsPath, string profilePath,\n        PersonalOptionCategories categories, bool targetUsesModernKeyNames, bool fovIsDegrees = true)",
+    "PCL.Core.Minecraft.PersonalOptions.PersonalOptionsSyncService::MethodDeclaration::FinishSession(PersonalOptionsSession session)"
+  ],
+  "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.cs",
+  "Sha256": "25FC2DB5091612CDC0080110AB75D4F9CAE42ABF3FCA939E18958D6460A1BC3D",
+  "Members": [
+    "PCL.ModLaunch::MethodDeclaration::McLaunchPrecheck()"
+  ],
+  "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.GameProcessLifecycle.McLaunchPrerun.cs",
+  "Sha256": "8BDE16B502182AE00E5E5793A6E74B96F688805BBEFB40F10F61FBB660548E7C",
+  "Members": [
+    "PCL.ModLaunch::MethodDeclaration::McLaunchRun(ModLoader.LoaderTask<int, Process> loader)"
+  ],
+  "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModModpack.UpdateCoordinator.cs",
+  "Sha256": "0E6EDD67A2F8705EF9584DE3198C92FDC2667C8A8228E124656B78BDF71BC3F8",
+  "Members": [
+    "PCL.ModModpack::MethodDeclaration::_UpdatePackFromOnline(McInstance instance, LoaderTask<int, int> task, string? localArchivePath)"
+  ],
+  "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModWatcher.cs",
+  "Sha256": "6516E5558ADD18A36E1E750695A2649BEE271464765D9379E9E16C483A46E57D",
+  "Members": [
+    "PCL.ModWatcher+Watcher::PropertyDeclaration::State"
+  ],
+  "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageDownload/ModDownloadLib.ForgeInstallerProcess.cs",
+  "Sha256": "1A5B8461D24F85526E7E7F22D54276D2ABCA2CBF1030C64E05C3B4CCF3E69746",
+  "Members": [
+    "PCL.ModDownloadLib::MethodDeclaration::ForgelikeInjector(string target, ModLoader.LoaderTask<bool, bool> task, string mcFolder,\n        bool useJavaWrapper, ModDownload.DlForgelikeEntry.ForgelikeType forgeType)"
+  ],
+  "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/Modules/Network/Loaders/LoaderDownload.cs",
+  "Sha256": "9252DE65F275DAC8D617817511C6545D6A8DDA2F65E90B9090033744C417C77D",
+  "Members": ["PCL.Network.Loaders.LoaderDownload::MethodDeclaration::Start(object input = null, bool isForceRestart = false)"],
+  "Reason": "Stages D/E: expose actual worker completion after Abort so migration/import can await file-handle release before cleaning owned staging directories. Original download execution remains inside try/finally."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.JavaSelection.McLaunchJava.cs",
+  "Sha256": "4E2C0157FF25389E4AC94F41FD6F13FC989E7814333B444F877B029683BAFAC3",
+  "Members": ["PCL.ModLaunch::MethodDeclaration::McLaunchJava(ModLoader.LoaderTask<int, int> task)"],
+  "Reason": "Extract the ordered existing Java constraints unchanged into ResolveJavaConstraints for both normal launch and target validation; separate verifier compares every moved statement against baseline allowing only the instance parameter replacement."
+}
+,
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyMsg/MyMsgText.xaml.cs",
+  "Sha256": "026E2DB3FC8D7F7E59D6E600368EDB22AFC5AF26316E32C27A2869005E6D16D2",
+  "Members": [
+    "PCL.MyMsgText::ConstructorDeclaration::.ctor(ModMain.MyMsgBoxConverter converter)",
+    "PCL.MyMsgText::MethodDeclaration::Load(object sender, RoutedEventArgs e)",
+    "PCL.MyMsgText::MethodDeclaration::Close()",
+    "PCL.MyMsgText::MethodDeclaration::Btn1_Click(object? sender = null, MouseButtonEventArgs? e = null)"
+  ],
+  "Reason": "User-requested loader selection unlock and direct version/loader modification, backup acknowledgement with visible monotonic 5-second delay and optional mod migration with 3-second delay. Existing dialog defaults unchanged."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/PageInstanceInstall.SelectionPresentation.cs",
+  "Sha256": "2F0EE828A920301DE628C3AA668CE9EE3054001F1DE4C44536AA602740B191CA",
+  "Members": [
+    "PCL.PageInstanceInstall::MethodDeclaration::GetCurrentInfo()"
+  ],
+  "Reason": "User-requested loader selection unlock and direct version/loader modification, backup acknowledgement with visible monotonic 5-second delay and optional mod migration with 3-second delay. Existing dialog defaults unchanged."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/PageInstanceInstall.xaml.cs",
+  "Sha256": "BF02D5F525AC138E510341B6EAC97D4962D219288ADCD7DC2230983D1962DAA4",
+  "Members": [
+    "PCL.PageInstanceInstall::MethodDeclaration::BtnSelectStart_Click(object sender, MouseButtonEventArgs mouseButtonEventArgs)",
+    "PCL.PageInstanceInstall::MethodDeclaration::MinecraftSelected(MyListItem sender, MouseButtonEventArgs e)"
+  ],
+  "Reason": "User-requested loader selection unlock and direct version/loader modification, backup acknowledgement with visible monotonic 5-second delay and optional mod migration with 3-second delay. Existing dialog defaults unchanged."
+}
+,
+{
+  "SourcePath": "PCL.Core/Utils/Hash/HashCache.cs",
+  "Sha256": "B4EDE8DDA1797EBC585FDE6A840403BF9CADEE26ED6072A8365FC0807AAE2941",
+  "Members": [
+    "PCL.Core.Utils.Hash.HashCache::MethodDeclaration::_GetHashAsync(string filePath, IHashProvider provider, string algoName)",
+    "PCL.Core.Utils.Hash.HashCache::MethodDeclaration::_GetHashWithPending(string filePath, IHashProvider provider, string algoName)",
+    "PCL.Core.Utils.Hash.HashCache::MethodDeclaration::_ComputeHashAsync(string fullPath, IHashProvider provider)"
+  ],
+  "Reason": "User-reported long indexing and file-in-use: latest current-instance bounded workers, empty-tree fast path, per-instance cache locks, no-delete-blocking hash stream with fingerprint invalidation, cancellable native foreground progress instead of UI-thread recursive parsing."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModJarInJar.cs",
+  "Sha256": "449DBA8966C2F9EF66832EC88CF34990580EBAD4540770B5A68826B64A95C420",
+  "Members": [
+    "PCL.ModJarInJar::MethodDeclaration::ResolveCached(string modFilePath, ZipArchive jar,\n        out bool complete, bool deferOnMiss = false,\n        long? expectedLastModified = null, long? expectedSize = null, ScanContext? scan = null,\n        string? preferredLoader = null)",
+    "PCL.ModJarInJar::MethodDeclaration::_Resolve(string parentPath, ZipArchive jar, int depth,\n        _ResolveBudget budget)"
+  ],
+  "Reason": "User-reported long indexing and file-in-use: latest current-instance bounded workers, empty-tree fast path, per-instance cache locks, no-delete-blocking hash stream with fingerprint invalidation, cancellable native foreground progress instead of UI-thread recursive parsing."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModJarInJarCache.cs",
+  "Sha256": "4664773E0181216655C31FC3359AD7267DA4AF25FAC749602AAF6E7E5F8A70C8",
+  "Members": [
+    "PCL.ModJarInJarCache::MethodDeclaration::TryGet(string path, long lastModified, long size)",
+    "PCL.ModJarInJarCache::MethodDeclaration::Set(string path, long lastModified, long size, List<EmbeddedModNode> tree)",
+    "PCL.ModJarInJarCache::MethodDeclaration::Prune(IEnumerable<string> keepPaths)",
+    "PCL.ModJarInJarCache::MethodDeclaration::Flush()"
+  ],
+  "Reason": "User-reported long indexing and file-in-use: latest current-instance bounded workers, empty-tree fast path, per-instance cache locks, no-delete-blocking hash stream with fingerprint invalidation, cancellable native foreground progress instead of UI-thread recursive parsing."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLocalComp.Members.GetFolderDescription.cs",
+  "Sha256": "71E971E1D862E5BEBF51D9CB2CAC83D6B084C067D2B4AA80B2A4F2E7EEFB4490",
+  "Members": [
+    "PCL.ModLocalComp::MethodDeclaration::_ResolveJijPendingBackground(List<LocalCompFile> pending, List<string> allModPaths,\n        string instancePath, int loaderTaskId, int generation)",
+    "PCL.ModLocalComp::MethodDeclaration::CompResourceListLoad(LoaderTask<CompLocalLoaderData, List<LocalCompFile>> loader)"
+  ],
+  "Reason": "User-reported long indexing and file-in-use: latest current-instance bounded workers, empty-tree fast path, per-instance cache locks, no-delete-blocking hash stream with fingerprint invalidation, cancellable native foreground progress instead of UI-thread recursive parsing."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/PageInstanceCompResource.SelectionActions.BtnSelectED_Click.cs",
+  "Sha256": "73AAD94B1C348955067196172FAFE6888B5C8E8C54D4FE016AF6E5236E81D612",
+  "Members": [
+    "PCL.PageInstanceCompResource::MethodDeclaration::_ConfirmCascadeReady()"
+  ],
+  "Reason": "User-reported long indexing and file-in-use: latest current-instance bounded workers, empty-tree fast path, per-instance cache locks, no-delete-blocking hash stream with fingerprint invalidation, cancellable native foreground progress instead of UI-thread recursive parsing."
+}
+,
+{
+  "SourcePath": "PCL.Core/App/Updates/UpdateChannelLevels.cs",
+  "Sha256": "E7E7E0998A9FAC2A276BDDBE7D920776F2A254388A55BCEB83F96288DF6CDF12",
+  "Members": [
+    "PCL.Core.App.Updates.UpdateChannelLevels::MethodDeclaration::FromSuffix(string? suffix)"
+  ],
+  "Reason": "Snapshot-3 hotfix must remain on snapshot channel, follow snapshot-3, and precede snapshot-4 and stable. Plain stable hotfix ordering unchanged; regression tests cover mixed suffix."
+},
+{
+  "SourcePath": "PCL.Core/App/Updates/UpdateVersion.cs",
+  "Sha256": "82BFBCD999954021073416A1FA38B53CB71B0A3E86692400C734FD8D4A326F11",
+  "Members": [
+    "PCL.Core.App.Updates.UpdateVersion::MethodDeclaration::_RankOf(string suffix)",
+    "PCL.Core.App.Updates.UpdateVersion::MethodDeclaration::_SequenceOf(string suffix)",
+    "PCL.Core.App.Updates.UpdateVersion::MethodDeclaration::_FamilyOf(string suffix)"
+  ],
+  "Reason": "Snapshot-3 hotfix must remain on snapshot channel, follow snapshot-3, and precede snapshot-4 and stable. Plain stable hotfix ordering unchanged; regression tests cover mixed suffix."
+}
+]
