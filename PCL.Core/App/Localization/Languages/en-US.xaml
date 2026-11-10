@@ -4,6 +4,40 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xml:space="preserve">
+    <sys:String x:Key="Setup.About.ReleaseDescription">1.7.5 hotfix-1: smaller LiquidGlass Windows projections and native graphics bindings reduce executable size. Fixed background opacity in glass mode; glass, text and the launcher badge retain their opacity.</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset">Performance preset</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.0">Low power</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.1">Balanced</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.2">High quality</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.3">Ultra</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.0">Low: 0 DIP blur, no dispersion or press animation, 30 FPS by default. Expected lowest cost; resolution, background and hardware still matter.</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.1">Balanced: 1 DIP blur, 0.08 dispersion and press animation, 60 FPS by default. Expected everyday balance; integrated GPUs can still see extra load.</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.2">High: 2 DIP blur, 0.20 dispersion and press animation, 90 FPS by default. Expected higher load, especially at high resolution or across monitors.</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.3">Ultra: 3 DIP blur, 0.30 dispersion, stronger highlights and press animation, 120 FPS by default. Expected highest load; power use, heat and stutter may increase.</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.FrameRate">Effect frame cap (30–240 FPS; far right is unlimited)</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Unlimited">Unlimited (may significantly increase power use)</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Confirm">Enable liquid glass?&#xA;Preset: {0}; effect frame cap: {1}.&#xA;{2}&#xA;This adds CPU/GPU, memory and battery costs. These are relative estimates, not device benchmarks or a smoothness guarantee. Screenshot-friendly background mode is the default. If live desktop refraction is enabled separately, the launcher is excluded from screenshots and recordings. No countdown is required.</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.DesktopConfirm">Live desktop refraction captures local monitor frames and continuously uses GPU/CPU resources. Frames are never saved or uploaded. To avoid recursive capture, Windows excludes the launcher from screenshots and recordings; the actual window stays open. Turn this option off to take a screenshot. Enable anyway?</sys:String>
+
+    <sys:String x:Key="Setup.GameManage.ModIndex.Title">Mod dependency index</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Description">Index every instance in all Minecraft folders discovered by PCL, including unselected and hidden instances. Shared mod folders with the same parser context are scanned once. Idle browsing does not build indexes; mod downloads still update them.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Discovering">Discovering instances across all Minecraft folders. You can cancel. Your home-page selection will stay unchanged.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.AllProgress">Instances processed: {0} / {1}&#xA;Current instance: {2}&#xA;Mod files processed for this instance: {3}</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.AllResult">Indexing ended: saved indexes for {0} instances ({1} with skipped files), skipped {2} mod files; {3} directory or save failures. Completed entries are kept on cancellation.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Partial">Saved indexes for {0} mods and skipped {1} unreadable files. Other indexes remain usable.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Skipped">These mod files were skipped and were not changed or deleted. Indexes for other files were saved and remain usable. Nested dependencies for the listed files are still incomplete:</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.FileUnavailable">The file is missing, unreadable, or is not a supported mod archive.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.FileIncomplete">Nested metadata could not be fully parsed, the archive exceeded parsing limits, or the file changed during scanning. Only this file was skipped.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.AllFailed">These instances or folders could not be indexed. Other instances were processed. See the log for details:</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Create">Create index now</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.PromptSetting">Offer to create missing indexes when opening the mods page</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.NoInstance">Select an instance on the home page before creating its index.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Working">Creating the index for “{0}”. You can cancel; completed entries will be saved. Files processed:</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Complete">Mod index created.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Incomplete">Indexing was cancelled or some files could not be indexed. Completed entries are saved; see the log and retry later.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Prompt">Some mods in “{0}” have no index yet. Nested mod and dependency checks may be incomplete. Create the index now? You can also use “Create index now” in Settings → Game management later.</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Later">Later</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Never">Don't ask again</sys:String>
 
     <!-- Meta -->
 
@@ -1144,8 +1178,8 @@
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Entry">Mod Relations</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Entry.ToolTip">View mod dependencies, missing prerequisites and bundled (Jar-in-Jar) structure</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Message">An overview of dependencies and bundled structure between mods. Disabling or deleting a mod will warn about affected dependencies.</sys:String>
-    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Title">Mods still loading</sys:String>
-    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Message">Embedded mod relationships are still being analyzed in the background. Dependency cascade detection may be incomplete right now and could miss mods that should be handled together. Continue anyway?</sys:String>
+    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Title">Mod index is incomplete</sys:String>
+    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Message">Some nested mod relationships have not been indexed, so disabling or deleting mods may miss related dependencies. Continuing will first create the missing index. You can cancel; the original operation runs only after indexing finishes.</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Empty.Title">No mod relations to analyze</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Empty.Message">None of this instance's mods declare dependencies or bundle other mods, or the mod list has not finished loading.</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Section.Warnings">Warnings</sys:String>
@@ -3189,6 +3223,23 @@ This corroborates the current asset against the Release record; it does not veri
     <sys:String x:Key="Setup.Ui.Background.Suit.TopLeft">Top-left</sys:String>
     <sys:String x:Key="Setup.Ui.Background.Suit.TopRight">Top-right</sys:String>
 
+    <!-- Setup.Ui.Tahoe -->
+
+    <sys:String x:Key="Setup.Ui.Tahoe.Title">Liquid Glass · LiquidGlass</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Stopped">Desktop refraction is off.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Starting">Waiting for the desktop frame. Showing a static material.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Live">Refracting the desktop live.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Compatibility">Desktop capture is active. This device uses the blur compatibility material.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Recovering">Desktop capture was interrupted. Recovering; unavailable areas use a static material.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Suspended">Desktop capture is paused until the window is visible again.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Unsupported">Desktop capture is unsupported. Showing a static material.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Failed">Desktop capture could not recover. Showing a static material. Toggle “Refract the desktop directly” to retry.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Enable">Use the Liquid Glass interface</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Description">Independent from advanced materials. The default launcher-background refraction supports screenshots. Enabling requires performance confirmation; quality and effect frame rate can be adjusted below.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Desktop">Live desktop refraction (excludes screenshots)</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Desktop.Description">Refract the real desktop while keeping your background image or video. To hide the background, manually lower “Background / window opacity” above. With glass enabled, that slider affects only the background, leaving glass and text unchanged. Desktop sampling excludes the launcher from screenshots and recordings to prevent recursion; turning it off restores visibility.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Compatibility">Desktop sampling requires Windows 10 version 2004 or later. Unavailable capture uses a static material; devices without Pixel Shader 3.0 use blur.</sys:String>
+
     <!-- Setup.Ui.Basic -->
 
     <sys:String x:Key="Setup.Ui.Basic.AdvancedMaterial">Advanced material</sys:String>
@@ -3209,7 +3260,7 @@ This corroborates the current asset against the Release record; it does not veri
     <sys:String x:Key="Setup.Ui.Basic.BlurSamplingRate.ToolTip">Sets the sampling rate of the blur effect. Higher values produce finer blur.&#xA;If your device has poor performance, try lowering this value for better performance.</sys:String>
     <sys:String x:Key="Setup.Ui.Basic.GetSnapshot">Get official snapshot build</sys:String>
     <sys:String x:Key="Setup.Ui.Basic.LockWindow">Lock launcher size</sys:String>
-    <sys:String x:Key="Setup.Ui.Basic.Opacity">Opacity</sys:String>
+    <sys:String x:Key="Setup.Ui.Basic.Opacity">Background / window opacity</sys:String>
     <sys:String x:Key="Setup.Ui.Window.Size">Window size</sys:String>
     <sys:String x:Key="Setup.Ui.Window.Size.Classic">PCL classic</sys:String>
     <sys:String x:Key="Setup.Ui.Window.Size.Hint">Next launch only</sys:String>
@@ -3616,7 +3667,7 @@ This corroborates the current asset against the Release record; it does not veri
     <sys:String x:Key="Tools.Test.Dependency.MissingMessage">Required dependency "{0}" is missing.&#xA;&#xA;Click OK to open Microsoft Store.</sys:String>
     <sys:String x:Key="Tools.Test.Dependency.Title">Dependency check</sys:String>
     <sys:String x:Key="Tools.Test.Error.OperationFailed">A test utility operation failed. See the details below.</sys:String>
-    <sys:String x:Key="Tools.Test.LaunchCount.Message">PCL Lite has launched games for you {0} times.</sys:String>
+    <sys:String x:Key="Tools.Test.LaunchCount.Message">PCL Lite has successfully launched games {0} times (Java, Bedrock and Lunar). Your existing total is preserved; previously unrecorded Bedrock and Lunar launches are not reconstructed.</sys:String>
     <sys:String x:Key="Tools.Test.LaunchCount.Title">View launch count</sys:String>
     <sys:String x:Key="Tools.Test.ServerQuery.Title">Check server</sys:String>
     <sys:String x:Key="Tools.Test.Title">Utilities</sys:String>

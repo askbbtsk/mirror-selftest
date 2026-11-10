@@ -4,6 +4,40 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xml:space="preserve">
+    <sys:String x:Key="Setup.About.ReleaseDescription">1.7.5 hotfix-1：精简 LiquidGlass 的 Windows 接口依赖，减小程序体积；修复液态玻璃开启时背景不透明度调低后背景没有变淡的问题，玻璃、文字和徽标保持不变。</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset">性能预设</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.0">低消耗</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.1">均衡</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.2">高画质</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.3">极致</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.0">低消耗：0 DIP 模糊、关闭色散和按压动效，默认 30 FPS。预计开销最低，仍取决于分辨率、背景和设备。</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.1">均衡：1 DIP 模糊、0.08 色散、按压动效，默认 60 FPS。预计适合日常使用，集成显卡也可能增加负载。</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.2">高画质：2 DIP 模糊、0.20 色散、按压动效，默认 90 FPS。预计负载较高，高分屏或多屏下尤其明显。</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Cost.3">极致：3 DIP 模糊、0.30 色散、增强高光和按压动效，默认 120 FPS。预计负载最高，可能增加功耗、温度和卡顿。</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.FrameRate">效果最高帧率（30–240 FPS，最右为不限制）</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Unlimited">不限制（可能显著增加功耗）</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.Confirm">是否开启液态玻璃？&#xA;预设：{0}；效果帧率上限：{1}。&#xA;{2}&#xA;会增加 CPU/GPU、内存和电量开销；这些是相对预估，不是设备实测或流畅度保证。默认使用可截图的背景模式。若另行开启实时桌面折射，启动器会从截图和录屏中排除。无需等待，确认后立即生效。</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.DesktopConfirm">实时桌面折射需要采集本机显示器画面并持续使用 GPU/CPU，画面不会保存或上传。为避免递归采集，Windows 会把启动器从系统截图和录屏中排除；窗口仍然开着。需要截图时关闭此选项即可。仍要启用吗？</sys:String>
+
+    <sys:String x:Key="Setup.GameManage.ModIndex.Title">模组依赖索引</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Description">为 PCL 已发现的所有 Minecraft 目录中的实例创建索引，包括未选中和隐藏的实例。相同解析环境下的共享模组目录只扫描一次。待机和浏览时不自动补建；下载模组后仍自动更新。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Discovering">正在发现所有 Minecraft 目录中的实例，可随时取消。不会切换主页所选实例。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.AllProgress">已处理实例：{0} / {1}&#xA;当前实例：{2}&#xA;当前实例已处理模组文件：{3}</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.AllResult">全实例索引任务结束：已保存 {0} 个实例索引（其中 {1} 个含跳过项），跳过 {2} 个模组文件，{3} 项目录或保存失败。取消时保留已完成项。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Partial">已保存 {0} 个模组的索引，跳过 {1} 个无法解析的文件；其余索引正常可用。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Skipped">以下模组文件已跳过，未改动或删除。其他文件的索引已保存并可正常使用；这些文件的内嵌依赖关系仍未完成：</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.FileUnavailable">文件不存在、无法读取，或不是当前支持的模组归档。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.FileIncomplete">内嵌元数据无法完整解析、归档超出解析限制，或文件在扫描期间发生变化。仅跳过此文件。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.AllFailed">以下实例或目录未能完成索引，其余实例继续处理。详情见日志：</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Create">立刻创建索引</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.PromptSetting">打开模组页面时，提示创建缺失的索引</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.NoInstance">请先在主页选择一个实例，再创建索引。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Working">正在为“{0}”创建索引。可随时取消，已完成的索引会保留。已处理文件数：</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Complete">模组索引创建完成。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Incomplete">索引未全部完成或已取消。已保存完成项，可稍后重试；详情见日志。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Prompt">“{0}”存在尚未建立索引的模组，内嵌关系和依赖检查可能不完整。是否现在创建？也可稍后在设置 → 游戏管理中点击“立刻创建索引”。</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Later">稍后</sys:String>
+    <sys:String x:Key="Setup.GameManage.ModIndex.Never">不再提示</sys:String>
 
     <!-- Meta -->
 
@@ -1144,8 +1178,8 @@
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Entry">模组关系</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Entry.ToolTip">查看模组的依赖关系、缺失前置与内嵌（Jar-in-Jar）结构</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Message">这里概览模组间的依赖关系与内嵌结构。禁用或删除模组时会提示受影响的依赖项。</sys:String>
-    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Title">模组仍在解析</sys:String>
-    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Message">内嵌模组关系仍在后台解析，此时禁用或删除的连带依赖检测可能不完整，可能遗漏应一并处理的模组。是否仍要继续？</sys:String>
+    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Title">模组索引尚未完成</sys:String>
+    <sys:String x:Key="Instance.Resource.Mod.JarInJar.ParsePending.Message">部分内嵌模组关系尚未建立完整索引，禁用或删除时可能遗漏相关依赖。继续将先创建缺失索引，可随时取消；完成后再执行原操作。</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Empty.Title">没有可分析的模组关系</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Empty.Message">当前实例的模组均无依赖声明或内嵌模组，或模组列表尚未加载完成。</sys:String>
     <sys:String x:Key="Instance.Resource.Mod.JarInJar.Section.Warnings">警告</sys:String>
@@ -3189,6 +3223,23 @@ Release 发布时间：{2}
     <sys:String x:Key="Setup.Ui.Background.Suit.TopLeft">居于左上</sys:String>
     <sys:String x:Key="Setup.Ui.Background.Suit.TopRight">居于右上</sys:String>
 
+    <!-- Setup.Ui.Tahoe -->
+
+    <sys:String x:Key="Setup.Ui.Tahoe.Title">液态玻璃 · LiquidGlass</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Stopped">桌面折射已关闭。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Starting">正在等待桌面画面，暂时显示静态材质。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Live">正在实时折射桌面。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Compatibility">桌面采样正常，当前设备使用模糊兼容材质。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Recovering">桌面采样中断，正在尝试恢复；未就绪区域使用静态材质。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Suspended">桌面采样已暂停；窗口恢复可见后继续。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Unsupported">系统不支持桌面采样，当前显示静态材质。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Failed">桌面采样恢复失败，当前显示静态材质；可重新开启“直接折射桌面”重试。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Enable">使用液态玻璃界面</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Description">独立的液态玻璃效果，不属于高级材质。默认折射启动器背景，可正常截图；开启前需确认性能开销，下方可调整画质与帧率。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Desktop">实时桌面折射（会排除截图）</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Desktop.Description">对窗口后的真实桌面进行折射，开启时保留背景图片和视频。需要隐藏背景时手动降低上方“背景 / 窗口不透明度”；玻璃模式下该滑块只影响背景，不淡化玻璃和文字。为避免递归，采样期间启动器会从截图与录屏中排除，关闭后恢复。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Compatibility">桌面采样需要 Windows 10 2004 或更高版本。采样不可用时显示静态材质；不支持 Pixel Shader 3.0 时使用模糊材质。</sys:String>
+
     <!-- Setup.Ui.Basic -->
 
     <sys:String x:Key="Setup.Ui.Basic.AdvancedMaterial">高级材质</sys:String>
@@ -3209,7 +3260,7 @@ Release 发布时间：{2}
     <sys:String x:Key="Setup.Ui.Basic.BlurSamplingRate.ToolTip">设定模糊效果的采样率，值越大模糊效果越细致。&#xA;若设备性能不佳，可尝试降低该值以获得更好的性能。</sys:String>
     <sys:String x:Key="Setup.Ui.Basic.GetSnapshot">获取官方快照版</sys:String>
     <sys:String x:Key="Setup.Ui.Basic.LockWindow">锁定启动器大小</sys:String>
-    <sys:String x:Key="Setup.Ui.Basic.Opacity">不透明度</sys:String>
+    <sys:String x:Key="Setup.Ui.Basic.Opacity">背景 / 窗口不透明度</sys:String>
     <sys:String x:Key="Setup.Ui.Window.Size">窗口大小</sys:String>
     <sys:String x:Key="Setup.Ui.Window.Size.Classic">PCL 经典</sys:String>
     <sys:String x:Key="Setup.Ui.Window.Size.Hint">仅影响下次启动</sys:String>
@@ -3647,7 +3698,7 @@ Release 发布时间：{2}
     <sys:String x:Key="Tools.Test.Dependency.MissingMessage">当前系统环境缺失软件运行所需依赖"{0}"&#xA;&#xA;点击确定打开微软应用商店安装</sys:String>
     <sys:String x:Key="Tools.Test.Dependency.Title">依赖检查</sys:String>
     <sys:String x:Key="Tools.Test.Error.OperationFailed">测试工具操作失败。请查看错误详情。</sys:String>
-    <sys:String x:Key="Tools.Test.LaunchCount.Message">PCL Lite 已经为你启动了 {0} 次游戏了。</sys:String>
+    <sys:String x:Key="Tools.Test.LaunchCount.Message">PCL Lite 已为你成功启动 {0} 次游戏（Java、基岩版和 Lunar）。旧累计值保留，升级前未记录的基岩版和 Lunar 启动不会补算。</sys:String>
     <sys:String x:Key="Tools.Test.LaunchCount.Title">查看启动计数</sys:String>
     <sys:String x:Key="Tools.Test.ServerQuery.Title">瞅眼服务器</sys:String>
     <sys:String x:Key="Tools.Test.Title">百宝箱</sys:String>

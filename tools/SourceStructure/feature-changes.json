@@ -45,7 +45,7 @@
 },
 {
   "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/PageInstanceCompResource.Presentation.LoadUIFromLoaderOutput.cs",
-  "Sha256": "A151D4DFF6A4E9101CEA81E1995B4D94546496FCD52A52D03E5FB077EF74CF50",
+  "Sha256": "8449D2EF6A77901DAC9D9A5334CDD20EE37B0CED49DE7A8569C5110DBB139EC7",
   "Members": [
     "PCL.PageInstanceCompResource::MethodDeclaration::LoadUIFromLoaderOutput()",
     "PCL.PageInstanceCompResource::MethodDeclaration::BuildLocalCompItem(ModLocalComp.LocalCompFile entry)"
@@ -79,7 +79,7 @@
 },
 {
   "SourcePath": "Plain Craft Launcher 2/Modules/Lunar/ModLunar.SocialAndSession.cs",
-  "Sha256": "7EEFB72BA634C5F6F7AB1E1DE62F498290AF7DA0F61A9C09B933602877F8F68A",
+  "Sha256": "7404DF793B3608B2A167431896C44F25AD8430E1D93701E81F98B36BA6B865AA",
   "Members": [
     "PCL.ModLunar::MethodDeclaration::LaunchCoreAsync(string gameDirectory)",
     "PCL.ModLunar::MethodDeclaration::WatchFirstWindow(Process process, string gameDirectory, DateTime startedAt, string subVersion,\n        bool vanillaReady)"
@@ -115,9 +115,10 @@
 },
 {
   "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.GameProcessLifecycle.McLaunchPrerun.cs",
-  "Sha256": "8BDE16B502182AE00E5E5793A6E74B96F688805BBEFB40F10F61FBB660548E7C",
+  "Sha256": "850D15B6E463A88F8FACD842B6CB8215F5E4F8EA325D993F3D8A30EC18B9D608",
   "Members": [
-    "PCL.ModLaunch::MethodDeclaration::McLaunchRun(ModLoader.LoaderTask<int, Process> loader)"
+    "PCL.ModLaunch::MethodDeclaration::McLaunchRun(ModLoader.LoaderTask<int, Process> loader)",
+    "PCL.ModLaunch::MethodDeclaration::McLaunchEnd()"
   ],
   "Reason": "Plan stage C: explicit metadata-aware durable update/recovery, installer exit validation, clone declaration isolation and reviewed per-instance controls memory. New regression tests cover interruption, conflicts and settings preservation."
 },
@@ -147,9 +148,12 @@
 }
 , {
   "SourcePath": "Plain Craft Launcher 2/Modules/Network/Loaders/LoaderDownload.cs",
-  "Sha256": "9252DE65F275DAC8D617817511C6545D6A8DDA2F65E90B9090033744C417C77D",
-  "Members": ["PCL.Network.Loaders.LoaderDownload::MethodDeclaration::Start(object input = null, bool isForceRestart = false)"],
-  "Reason": "Stages D/E: expose actual worker completion after Abort so migration/import can await file-handle release before cleaning owned staging directories. Original download execution remains inside try/finally."
+  "Sha256": "31D7C1E41E0D104FF387E5F2C50EA0296D125C949718CA476DD33D051289CDA8",
+  "Members": [
+    "PCL.Network.Loaders.LoaderDownload::MethodDeclaration::Start(object input = null, bool isForceRestart = false)",
+    "PCL.Network.Loaders.LoaderDownload::MethodDeclaration::OnFileFinish(PCL.Network.DownloadFile file)"
+  ],
+  "Reason": "Retain awaited cancellation/handle release; completed mod downloads enqueue coalesced indexing without delaying or failing the original download. Idle browsing no longer starts indexing."
 }
 , {
   "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLaunch.JavaSelection.McLaunchJava.cs",
@@ -199,7 +203,7 @@
 },
 {
   "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModJarInJar.cs",
-  "Sha256": "449DBA8966C2F9EF66832EC88CF34990580EBAD4540770B5A68826B64A95C420",
+  "Sha256": "8F8FD2024577ADF49F03A93CB16729601998E061A22A23622A4C7F3D14670CFD",
   "Members": [
     "PCL.ModJarInJar::MethodDeclaration::ResolveCached(string modFilePath, ZipArchive jar,\n        out bool complete, bool deferOnMiss = false,\n        long? expectedLastModified = null, long? expectedSize = null, ScanContext? scan = null,\n        string? preferredLoader = null)",
     "PCL.ModJarInJar::MethodDeclaration::_Resolve(string parentPath, ZipArchive jar, int depth,\n        _ResolveBudget budget)"
@@ -208,18 +212,19 @@
 },
 {
   "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModJarInJarCache.cs",
-  "Sha256": "4664773E0181216655C31FC3359AD7267DA4AF25FAC749602AAF6E7E5F8A70C8",
+  "Sha256": "67C8707C51B719E75E998276655E567B188CCE15150E335BE4B7E429CF21EFFF",
   "Members": [
     "PCL.ModJarInJarCache::MethodDeclaration::TryGet(string path, long lastModified, long size)",
     "PCL.ModJarInJarCache::MethodDeclaration::Set(string path, long lastModified, long size, List<EmbeddedModNode> tree)",
     "PCL.ModJarInJarCache::MethodDeclaration::Prune(IEnumerable<string> keepPaths)",
-    "PCL.ModJarInJarCache::MethodDeclaration::Flush()"
+    "PCL.ModJarInJarCache::MethodDeclaration::Flush()",
+    "PCL.ModJarInJarCache::MethodDeclaration::_FlushStore(_Store store)"
   ],
   "Reason": "User-reported long indexing and file-in-use: latest current-instance bounded workers, empty-tree fast path, per-instance cache locks, no-delete-blocking hash stream with fingerprint invalidation, cancellable native foreground progress instead of UI-thread recursive parsing."
 },
 {
   "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModLocalComp.Members.GetFolderDescription.cs",
-  "Sha256": "71E971E1D862E5BEBF51D9CB2CAC83D6B084C067D2B4AA80B2A4F2E7EEFB4490",
+  "Sha256": "8D139C22CF78827665EE1F0CAE29F1A798D5F5F5A14F403B214B158E9DA9E891",
   "Members": [
     "PCL.ModLocalComp::MethodDeclaration::_ResolveJijPendingBackground(List<LocalCompFile> pending, List<string> allModPaths,\n        string instancePath, int loaderTaskId, int generation)",
     "PCL.ModLocalComp::MethodDeclaration::CompResourceListLoad(LoaderTask<CompLocalLoaderData, List<LocalCompFile>> loader)"
@@ -228,9 +233,10 @@
 },
 {
   "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/PageInstanceCompResource.SelectionActions.BtnSelectED_Click.cs",
-  "Sha256": "73AAD94B1C348955067196172FAFE6888B5C8E8C54D4FE016AF6E5236E81D612",
+  "Sha256": "1562BD5540FD5456CA94BC4BDF64D4C32B61B343341D0F19B03BC57E175CFC97",
   "Members": [
-    "PCL.PageInstanceCompResource::MethodDeclaration::_ConfirmCascadeReady()"
+    "PCL.PageInstanceCompResource::MethodDeclaration::_ConfirmCascadeReady()",
+    "PCL.PageInstanceCompResource::MethodDeclaration::UpdateResource(IEnumerable<ModLocalComp.LocalCompFile> modList)"
   ],
   "Reason": "User-reported long indexing and file-in-use: latest current-instance bounded workers, empty-tree fast path, per-instance cache locks, no-delete-blocking hash stream with fingerprint invalidation, cancellable native foreground progress instead of UI-thread recursive parsing."
 }
@@ -264,5 +270,244 @@
   "Sha256": "DA85B6EF0695706C5DA3107E7B2396B21265B4BEDC207092A28C378C0E4DDCC6",
   "Members": ["PCL.PageSpeedLeft::MethodDeclaration::TaskRefresh(ModLoader.LoaderBase loader)"],
   "Reason": "Refresh migration phase state and current file/project labels even when total progress is unchanged during a network lookup. Existing PCL task card controls and cancellation are reused."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageInstance/PageInstanceCompResource.Initialization.GetRequireLoaderData.cs",
+  "Sha256": "98D0E4FE79156FF18C3ED0110D72ECDA9056D3D9CBDFF23D617C3E49798ED5E2",
+  "Members": ["PCL.PageInstanceCompResource::MethodDeclaration::PageOther_Loaded()"],
+  "Reason": "Offer explicit missing-index creation once per instance/session, with persistent don't-ask preference, instead of idle indexing."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageSetup/PageSetupGameManage.xaml.cs",
+  "Sha256": "45041B906E63F9FF03A5487BB58E034784B1CF0243CAF44D3E3B1886F4D57C5B",
+  "Members": ["PCL.PageSetupGameManage::MethodDeclaration::Reload()"],
+  "Reason": "Load the persistent index prompt preference beside the new 42px native manual creation button. Other settings retain their existing bindings."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/McInstance.Members.PathInstance.cs",
+  "Sha256": "E913C78158117BDADA8194220EE4D8DF13F40A2E25EB6817A24BCEA49A2C37F0",
+  "Members": ["PCL.McInstance::PropertyDeclaration::JsonObject"],
+  "Reason": "All-folder index discovery must resolve inheritsFrom relative to the instance's own versions directory, matching Check() and preserving the selected global Minecraft root. The former name-only constructor silently used the selected root for other-root instances."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageDownload/ModDownloadLib.InstanceInstallCoordinator.cs",
+  "Sha256": "9341B014A19E688E3F476E83AB1BDD1BE5BF35E85CDA19BD176A81E31143A772",
+  "Members": ["PCL.ModDownloadLib::MethodDeclaration::McInstallLoader(McInstallRequest request, bool dontFixLibraries = false,\n        bool ignoreDump = false)"],
+  "Reason": "Honor the requested target instance folder for ignore markers and final JSON merge, and pass its own Minecraft root to vanilla download. Modification staging now lives under OS temp instead of polluting live versions; ordinary requests still resolve to the same folder."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Program.cs",
+  "Sha256": "D2DBF6D78F4462EFAB974777C99AE76737FCE1EF471D6B2CB3E8E830F6D35148",
+  "Members": ["PCL.Program::MethodDeclaration::Main()"],
+  "Reason": "At startup retry cleanup of marked unlocked modification workspaces only in the dedicated OS-temp namespace. Active leases, ownership changes and links are preserved. Cleanup errors are logged off the UI thread."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyMsg/MyMsgSelect.xaml.cs",
+  "Sha256": "360973D25403FBD984DC7E3E0A6E6376EB5EC39F14C49B32E565FE87667EF03F",
+  "Members": [
+    "PCL.MyMsgSelect::MethodDeclaration::InitializeSelectionList(object content)",
+    "PCL.MyMsgSelect::MethodDeclaration::Load(object sender, EventArgs e)",
+    "PCL.MyMsgSelect::MethodDeclaration::Btn1_Click(object sender, MouseButtonEventArgs e)",
+    "PCL.MyMsgSelect::MethodDeclaration::_UpdateCheckedState()"
+  ],
+  "Reason": "Synchronize the multiselect confirm button after adding controls and on Loaded so preselected migration rows can be confirmed immediately. The same tested index projection drives enabled state and submission; empty/all-unchecked selections remain blocked, single-select behavior is unchanged."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyButton.xaml.cs",
+  "Members": [
+    "PCL.MyButton::FieldDeclaration::PaddingProperty",
+    "PCL.MyButton::ConstructorDeclaration::.ctor()",
+    "PCL.MyButton::PropertyDeclaration::Padding",
+    "PCL.MyButton::MethodDeclaration::RefreshColor(object obj = null, object e = null)",
+    "PCL.MyButton::MethodDeclaration::Button_MouseUp(object sender, MouseButtonEventArgs e)",
+    "PCL.MyButton::MethodDeclaration::Button_MouseDown(object sender, MouseButtonEventArgs e)",
+    "PCL.MyButton::MethodDeclaration::Button_MouseEnter()",
+    "PCL.MyButton::MethodDeclaration::Button_MouseUp()",
+    "PCL.MyButton::MethodDeclaration::Button_MouseLeave()"
+  ],
+  "Reason": "Tahoe opt-in feature: Route the opt-in glass press/keyboard states and separated padding/content layer; disabled mode retains the original mouse and color path. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "F348229CAABA46C0DD7C386674E58DA46C3CEB2E5155B1896CFB3C0564408CC0"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyCard.cs",
+  "Members": [
+    "PCL.MyCard::ConstructorDeclaration::.ctor()",
+    "PCL.MyCard::PropertyDeclaration::AnimatableBrush",
+    "PCL.MyCard::MethodDeclaration::MyCard_MouseEnter(object sender, MouseEventArgs e)",
+    "PCL.MyCard::MethodDeclaration::MyCard_MouseLeave(object sender, MouseEventArgs e)"
+  ],
+  "Reason": "Tahoe opt-in feature: Use neutral reading surfaces in the opt-in theme and suppress the former colored hover shadow; restore original chrome when disabled. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "A9EEB9526657E5561B5C1B502D94ACC0D9F2F0AB181A57A4C186FA808A44AC37"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyComboBox.cs",
+  "Members": [
+    "PCL.MyComboBox::ConstructorDeclaration::.ctor()",
+    "PCL.MyComboBox::MethodDeclaration::OnApplyTemplate()",
+    "PCL.MyComboBox::MethodDeclaration::RefreshColor()"
+  ],
+  "Reason": "Tahoe opt-in feature: Apply and restore opt-in field chrome after template, focus and theme changes. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "0D3E1F4BFFA9BC68ABE2F22BBB39EB629DA908CFE1BC3BFD89FA6A21CF958876"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyListItem.InputAndSelection.cs",
+  "Members": [
+    "PCL.MyListItem::MethodDeclaration::RefreshColor(object sender, EventArgs e)"
+  ],
+  "Reason": "Tahoe opt-in feature: Apply navigation-only opt-in visuals after existing selection/event logic, preserving instance and file-list behavior. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "3BBDC61DF48383BBB992DE9D65A35EDCED62D960160A9152415D0FB2EF47EF53"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyListItem.xaml.cs",
+  "Members": [
+    "PCL.MyListItem::ConstructorDeclaration::.ctor()"
+  ],
+  "Reason": "Tahoe opt-in feature: Apply navigation-only opt-in visuals after existing selection/event logic, preserving instance and file-list behavior. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "A6D441FCEDEEC12291F59A8B12F7E4D8E5A237BE96B1A813206E10033FC98633"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyListItem.SelectionAnimation.cs",
+  "Members": [
+    "PCL.MyListItem::MethodDeclaration::SetChecked(bool value, bool user, bool anime)"
+  ],
+  "Reason": "Tahoe opt-in feature: Apply navigation-only opt-in visuals after existing selection/event logic, preserving instance and file-list behavior. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "3971A3852E67B0785C34EBF8681614C1FC783BE7EA01E8445F4C1E57B53E8E13"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyRadioButton.xaml.cs",
+  "Members": [
+    "PCL.MyRadioButton::ConstructorDeclaration::.ctor()",
+    "PCL.MyRadioButton::MethodDeclaration::RefreshColor(object obj = null, object e = null)"
+  ],
+  "Reason": "Tahoe opt-in feature: Subscribe/unsubscribe opt-in theme notifications and select the Tahoe color path while enabled. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "161B00733CDE6C3AEF4B1859664EBC1C94025A9082220632403B517B77B62607"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Controls/MyTextBox.cs",
+  "Members": [
+    "PCL.MyTextBox::ConstructorDeclaration::.ctor()",
+    "PCL.MyTextBox::MethodDeclaration::RefreshColor()",
+    "PCL.MyTextBox::MethodDeclaration::RefreshTextColor()"
+  ],
+  "Reason": "Tahoe opt-in feature: Apply/restorably refresh opt-in field chrome without replacing validation or input behavior. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "2A73F4B6236895C8B3A3951C4A6855D66B5A803FF15C21962FD53F8F7B4B7E20"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/FormMain.xaml.cs",
+  "Members": [
+    "PCL.FormMain::ConstructorDeclaration::.ctor()",
+    "PCL.FormMain::MethodDeclaration::FormMain_Loaded()"
+  ],
+  "Reason": "Tahoe opt-in feature: Wire rounded host resizing, suppress competing legacy blur and route video looping through desktop-mode pause policy. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "F78394354724B950517B094B3C37A1BD1CEAB0207EDAF5F194E4733E70D823FD"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/FormMain.FileDropHandling.cs",
+  "Members": [
+    "PCL.FormMain::MethodDeclaration::VideoEnded(object sender, RoutedEventArgs e)"
+  ],
+  "Reason": "Tahoe opt-in feature: Wire rounded host resizing, suppress competing legacy blur and route video looping through desktop-mode pause policy. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "6B051E9657D39E31628FC49A381708C634E6409B8041F2E02E0AC2EFCCDAC96C"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Base/ModSetup.cs",
+  "Members": [
+    "PCL.ModSetup::ConstructorDeclaration::.ctor()",
+    "PCL.ModSetup::MethodDeclaration::ApplyAll()",
+    "PCL.ModSetup::MethodDeclaration::UiLauncherTransparent(int value)",
+    "PCL.ModSetup::MethodDeclaration::UiFont(string value)",
+    "PCL.ModSetup::MethodDeclaration::UiBlurValue(int value)"
+  ],
+  "Reason": "Glass settings observers remain. User-requested opacity separation now delegates to LiquidGlassCore: glass mode only fades background layers; disabling restores the original whole-window opacity. Tests cover the entire slider range and invalid values.",
+  "Sha256": "67D302432BD62DD8E1CDC82EEEB30C479888EB47F6D8AD6D9861A5259C3A5319"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/ModVideoBack.cs",
+  "Members": [
+    "PCL.ModVideoBack::MethodDeclaration::VideoPlay()"
+  ],
+  "Reason": "Restore the normal configured wallpaper video playback path. Desktop refraction no longer automatically hides or pauses the background; manual opacity controls presentation.",
+  "Sha256": "30747FF4A2CA68C3B3EA8932F4D5DE6DF8661970848247A6C57E4356555E3A2D"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/UI/Theme/ThemeManager.cs",
+  "Members": [
+    "PCL.ThemeManager::MethodDeclaration::ThemeRefreshMain()",
+    "PCL.ThemeManager::MethodDeclaration::RefreshBackground()"
+  ],
+  "Reason": "LiquidGlass hotfix-1: preserve the existing theme brush calculation but draw it only in LauncherBackgroundLayer. PanForm must remain transparent so the background-only opacity slider works. The source hash also pins the unchanged ThemeRefreshMain entry. Covered by shipped-XAML and rendered background-pixel regressions.",
+  "Sha256": "EDF91C867BC700396E078011FC849182E2C90CF9590CC42E0ACC822E8ECC0786"
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageSetup/PageSetupUI.PreferenceBinding.cs",
+  "Members": [
+    "PCL.PageSetupUI::MethodDeclaration::Reload()"
+  ],
+  "Reason": "Tahoe opt-in feature: Reload the two new opt-in appearance controls from local preferences. Reviewed against origin/main; 23 Tahoe regressions and 958 total unit tests pass.",
+  "Sha256": "52B41F929B5A69D41ECA8330EC9ADBBF1FDB97576751769D49268E08E224F279"
+}
+, {
+  "SourcePath": "PCL.Core/App/ProjectLinks.cs",
+  "Sha256": "F1CF39D98C4D4E12200324E4CBE0126ABB3ECF4AD049A371A34F0B53AA9E8097",
+  "Members": [
+    "PCL.Core.App.ProjectLinks::PropertyDeclaration::UpdateManifest",
+    "PCL.Core.App.ProjectLinks::PropertyDeclaration::UpdateManifestMirror",
+    "PCL.Core.App.ProjectLinks::PropertyDeclaration::UpdateManifestApi"
+  ],
+  "Reason": "User retires service v1. All service manifest properties now address updatev2.json. Existing three-argument URL builders and explicit repository-identity update.json requests remain compatible."
+},
+{
+  "SourcePath": "PCL.Core/App/Updates/UpdateManifestPlan.cs",
+  "Sha256": "8FEBCF60896A0CFB22BDCF14383E5CFFF53AAF2AE369670FD57B6AB14DECCD43",
+  "Members": ["PCL.Core.App.Updates.UpdateManifestPlanner::MethodDeclaration::Build(string? v2Body, string? v1Body)"],
+  "Reason": "User explicitly removes v2-to-v1 fallback. Compatibility overload ignores legacy body and delegates to v2-only parsing. Request-recording tests assert failure never causes a v1 fetch."
+},
+{
+  "SourcePath": "PCL.Core/App/Updates/UpdateManifestV2.cs",
+  "Sha256": "F2809E758E785A9AC27F9BB2E6481821DE2CC430E13058F35E27C6554ADE1A96",
+  "Members": ["PCL.Core.App.Updates.UpdateManifestV2::MethodDeclaration::_CollectEntries(JsonNode? root, List<string> problems)"],
+  "Reason": "Reject top-level v1 single-pointer bodies instead of promoting them to v2 sources. Valid v2 object/array forms and source ranking remain unchanged."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Updates/UpdatesManifestModel.cs",
+  "Sha256": "858BC59D4EF4EC4B4D355CB05B1CD2DB0B82F32D98846D9E2CE81D3BA0E0631F",
+  "Members": [
+    "PCL.UpdatesManifestModel::MethodDeclaration::_Load(bool force)",
+    "PCL.UpdatesManifestModel::MethodDeclaration::_IsTrustedSource(UpdateSourceEntry entry)"
+  ],
+  "Reason": "Only fetch updatev2.json from service anchors; failures propagate to the existing outer source pipeline without requesting v1. Nonofficial release repository identity uses separately named update.json constant with the exact existing value and validation."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/FormMain.WindowMessageHandling.cs",
+  "Sha256": "7082CEB367CBD32BA094CED2FE6BF2E47D767B1BA57CB8494370E0B56748C589",
+  "Members": ["PCL.FormMain::MethodDeclaration::IsNavigationFeatureHidden(int id)"],
+  "Reason": "User adds plugin market to existing personalization hide controls. Tab 14 follows the persisted PagePlugins preference and the existing HiddenForceShow override; overflow calculation already consumes this shared visibility predicate."
+}
+, {
+  "SourcePath": "Plain Craft Launcher 2/Pages/PageSetup/PageSetupUI.ThemesAndHomepage.cs",
+  "Sha256": "42CAF35206B6A7717555F683FBF5715FE3BA6F7FBA1D26046473C74E1E7691BF",
+  "Members": ["PCL.PageSetupUI::MethodDeclaration::SliderLoad()"],
+  "Reason": "Opacity hint uses the same composition policy as rendering: 0-100% background while glass is enabled, original 40-100% whole-window opacity otherwise. Other slider bindings remain unchanged."
+}
+, {
+  "SourcePath": "PCL.Core/Link/Bedrock/BedrockService.cs",
+  "Sha256": "2FD28F75A843D14C0B9190982CE673EF117E4917D1CA66973F0B372AE1385BEA",
+  "Members": ["PCL.Core.Link.Bedrock.BedrockService::MethodDeclaration::Launch(BedrockInstall install, out string? error)"],
+  "Reason": "Extend the existing successful game counter to portable/Store Bedrock. Capture preexisting game processes and observe only actual new live game processes after accepted activation; shell processes and repeated PID/start-time observations cannot increment."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModBedrockGdk.cs",
+  "Sha256": "40FF3AF42EC50F523523A5E34F23E0D5F5965BA61114E0CEB38ECAD700D7D978",
+  "Members": ["PCL.ModBedrockGdk::MethodDeclaration::Launch(string gameDirectory, string? arguments = null, string? versionId = null)"],
+  "Reason": "Register successful direct Bedrock game PID for shared launch counting without changing process arguments, launch order or CIK behavior. Existing and failed processes do not count."
+},
+{
+  "SourcePath": "Plain Craft Launcher 2/Modules/Minecraft/ModBedrockUwp.cs",
+  "Sha256": "F9C920D92A3FBC62A25F5C7872821B34233C7FFE0F2A959E4639F8F1BF2A5692",
+  "Members": [
+    "PCL.ModBedrockUwp::MethodDeclaration::LaunchPackage(string? targetPackageName = null)",
+    "PCL.ModBedrockUwp::MethodDeclaration::LaunchEditor()"
+  ],
+  "Reason": "Observe new actual Minecraft processes after existing UWP/Editor activation paths. UWP does not require a process-owned HWND, since ApplicationFrameHost may own its window. Shell success alone never increments."
 }
 ]

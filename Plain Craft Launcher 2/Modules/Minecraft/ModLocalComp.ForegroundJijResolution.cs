@@ -10,6 +10,12 @@ public static partial class ModLocalComp
 {
     internal static int CurrentJijGeneration => Volatile.Read(ref _jijGeneration);
 
+    internal static void CancelBackgroundIndex()
+    {
+        Interlocked.Increment(ref _jijGeneration);
+        JijWorkers.CancelObsolete();
+    }
+
     internal static async Task<bool> ResolveJijForCurrentOutputAsync(List<LocalCompFile> output, string instancePath,
         int expectedGeneration, CancellationToken token, IProgress<int> progress)
     {
@@ -34,7 +40,11 @@ public static partial class ModLocalComp
             ModJarInJarCache.UseInstance(instancePath);
             lock (sharedScanGate)
                 JijScanContext = sharedScan ??= new ModJarInJar.ScanContext(() => workerToken.IsCancellationRequested || !IsCurrent());
-            try { mod.ResolveJijNow(); progress.Report(Interlocked.Increment(ref completed)); }
+            try
+            {
+                ModIndexService.RunWorker(() => mod.ResolveJijNow(), workerToken);
+                progress.Report(Interlocked.Increment(ref completed));
+            }
             finally { JijScanContext = null; ModJarInJarCache.UseInstance(null); }
         }, token, IsCurrent).ConfigureAwait(false);
         if (!IsCurrent()) return false;

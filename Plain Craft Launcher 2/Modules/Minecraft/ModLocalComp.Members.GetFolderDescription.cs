@@ -15,7 +15,7 @@ namespace PCL;
 
 public static partial class ModLocalComp
 {
-    private static readonly LatestBatchWorkScheduler JijWorkers = new(Math.Clamp(Environment.ProcessorCount / 2, 1, 3));
+    private static readonly LatestBatchWorkScheduler JijWorkers = new(ModIndexService.WorkerCount);
 
     /// <summary>
     ///     获取文件夹描述信息。
@@ -79,7 +79,7 @@ public static partial class ModLocalComp
                 ModJarInJarCache.UseInstance(instancePath);
                 lock (scanGate)
                     JijScanContext = sharedScan ??= new ModJarInJar.ScanContext(() => token.IsCancellationRequested || IsObsolete());
-                try { mod.ResolveJijNow(); }
+                try { ModIndexService.RunWorker(() => mod.ResolveJijNow(), token); }
                 finally { JijScanContext = null; ModJarInJarCache.UseInstance(null); }
             }, canStart: () => !IsObsolete()).GetAwaiter().GetResult();
 
@@ -255,16 +255,44 @@ public static partial class ModLocalComp
             var jijInstancePath = jijEnabled ? loader.input.gameVersion.PathInstance : null;
             var preferredLoader = jijEnabled ? GetPreferredLoader(loader.input.gameVersion) : null;
             var jijGeneration = 0;
+            var downloadRequestedIndex = false;
             Action? startJijResolve = null;
             ModJarInJarCache.UseInstance(jijInstancePath);
             // Phase 1：缓存未命中的内嵌解析延后到后台，让列表尽快出现（完成前禁用/删除级联会提示不完整）
             if (jijEnabled)
             {
+                ModIndexService.Register(loader.input.gameVersion);
+                downloadRequestedIndex = ModIndexService.Policy.ConsumeDownloadRequest(loader.input.compPath);
                 jijGeneration = Interlocked.Increment(ref _jijGeneration);
                 JijWorkers.CancelObsolete();
                 CompJijResolved = false;
                 DeferJijOnMiss = true;
             }
+
+            // Bind ThreadStatic context on every worker. Browsing reads metadata and cached trees,
+            // while expensive nested archive decoding remains an explicit operation.
+            var unstableReads = new System.Collections.Concurrent.ConcurrentDictionary<LocalCompFile, byte>();
+            if (jijEnabled)
+                Parallel.ForEach(modList.Where(mod => !mod.IsFolder),
+                    new ParallelOptions { MaxDegreeOfParallelism = ModIndexService.WorkerCount }, mod =>
+                    {
+                        if (loader.IsAborted) return;
+                        ModJarInJarCache.UseInstance(jijInstancePath);
+                        DeferJijOnMiss = true;
+                        try
+                        {
+                            mod.PreferredLoader = preferredLoader;
+                            mod.Load();
+                            if (mod.State != LocalCompFile.LocalFileStatus.Unavailable)
+                                _ = mod.ModrinthHash;
+                        }
+                        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                        {
+                            unstableReads.TryAdd(mod, 0);
+                            ModBase.Log(error, $"跳过扫描期间变化或不可读的模组：{mod.path}", ModBase.LogLevel.Developer);
+                        }
+                        finally { DeferJijOnMiss = false; ModJarInJarCache.UseInstance(null); }
+                    });
 
             foreach (var ModEntry in modList)
             {
@@ -283,10 +311,19 @@ public static partial class ModLocalComp
                     ModEntry.Load();
                 
                 // 读取 Comp 缓存
-                if (ModEntry.State == LocalCompFile.LocalFileStatus.Unavailable)
+                if (ModEntry.State == LocalCompFile.LocalFileStatus.Unavailable || unstableReads.ContainsKey(ModEntry))
                     continue;
-                var cacheKey = ModEntry.ModrinthHash + loader.input.gameVersion.Info.VanillaName +
+                string cacheKey;
+                try
+                {
+                    cacheKey = ModEntry.ModrinthHash + loader.input.gameVersion.Info.VanillaName +
                                loader.input.loaders.Join("");
+                }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                {
+                    ModBase.Log(error, $"跳过扫描期间变化或不可读的资源：{ModEntry.path}", ModBase.LogLevel.Developer);
+                    continue;
+                }
                 if (cache.ContainsKey(cacheKey))
                 {
                     ModEntry.FromJson((JsonObject)cache[cacheKey]);
@@ -309,10 +346,10 @@ public static partial class ModLocalComp
                 {
                     // 全部命中缓存：无需后台补解析，直接清理+落盘
                     ModJarInJarCache.Prune(allModPaths);
-                    ModJarInJarCache.Flush();
+                    ModJarInJarCache.FlushCurrent();
                     if (jijGeneration == Volatile.Read(ref _jijGeneration)) CompJijResolved = true;
                 }
-                else
+                else if (downloadRequestedIndex)
                 {
                     var loaderTaskId = Task.CurrentId ?? -1;
                     startJijResolve = () =>
