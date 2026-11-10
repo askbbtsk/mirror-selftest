@@ -4156,7 +4156,7 @@ Current files will be overwritten (a .importbak copy is kept). Continue?</sys:St
     <sys:String x:Key="Instance.LoaderChange.SecondWarning">Confirm again: you have a complete backup of “{0}” and understand that changing loaders can prevent launch or break compatibility. Wait 5 seconds before confirming. Cancel immediately to leave files unchanged.</sys:String>
     <sys:String x:Key="Instance.LoaderChange.ConfirmChange">Confirm loader change</sys:String>
     <sys:String x:Key="Instance.LoaderChange.ModTitle">Migrate existing mods</sys:String>
-    <sys:String x:Key="Instance.LoaderChange.ModPrompt">Change “{0}” from Minecraft {1} to {2}. Find and migrate mods supporting the target Minecraft version and loader? Keeping existing mods unchanged may leave incompatible files.</sys:String>
+    <sys:String x:Key="Instance.LoaderChange.ModPrompt">Instance: “{0}”&#xA;Operation: {3}&#xA;Current environment: {1}&#xA;Target environment: {2}&#xA;&#xA;Find and migrate mods supporting the target environment? Keeping existing mods unchanged may leave incompatible files.</sys:String>
     <sys:String x:Key="Instance.LoaderChange.MigrateMods">Migrate mods</sys:String>
     <sys:String x:Key="Instance.LoaderChange.KeepMods">Keep mods unchanged</sys:String>
     <sys:String x:Key="Instance.LoaderChange.ModSecondWarning">Confirm mod migration: only builds of the same project explicitly supporting the target version and loader are eligible. Replaced originals are retained as disabled files; unresolved or conflicting items are preserved and reported. Wait 3 seconds before confirming.</sys:String>
@@ -4164,4 +4164,17 @@ Current files will be overwritten (a .importbak copy is kept). Continue?</sys:St
     <sys:String x:Key="Instance.Modification.VanillaMods">The target is vanilla Minecraft. Loader-based mod migration is unavailable; existing files were preserved.</sys:String>
     <sys:String x:Key="Instance.Modification.ReplacePreview">After committing, these original mods will be retained as disabled files and replaced by the target builds. Their original bytes, configurations and worlds are preserved. Continue?&#xA;{0}</sys:String>
     <sys:String x:Key="Instance.Modification.Success">Instance “{0}” was modified in place. Replaced originals were retained as disabled files. Unresolved items and reasons follow.</sys:String>
+    <sys:String x:Key="Instance.LoaderChange.Action.Game">Change Minecraft version</sys:String>
+    <sys:String x:Key="Instance.LoaderChange.Action.Loader">Change loader</sys:String>
+    <sys:String x:Key="Instance.LoaderChange.Action.Both">Change Minecraft version and loader</sys:String>
+    <sys:String x:Key="Instance.Modification.Stage.Index">Identify current-instance mods and target builds</sys:String>
+    <sys:String x:Key="Instance.Modification.Stage.Dependencies">Preflight dependencies of all selected mods</sys:String>
+    <sys:String x:Key="Instance.Modification.Stage.Download">Download mods and approved dependencies in a batch</sys:String>
+    <sys:String x:Key="Instance.Modification.Stage.Validate">Verify target files, mod relationships and Java</sys:String>
+    <sys:String x:Key="Instance.Modification.Stage.Commit">Commit changes to this instance</sys:String>
+    <sys:String x:Key="Instance.Modification.DependencyBatch">The following required dependencies were collected before downloading. Each artifact will be handled once for the target game version and loader:&#xA;&#xA;{0}&#xA;&#xA;Continue?</sys:String>
+    <sys:String x:Key="Instance.Modification.DependencySkipped">These mods have target dependencies that cannot be reliably satisfied. They are excluded from replacement and their original files are preserved:&#xA;&#xA;{0}&#xA;&#xA;Continue to modify only items that passed preflight. Preserved old mods may be incompatible with the new environment. Cancel to resolve them manually.</sys:String>
+    <sys:String x:Key="Instance.Modification.AutoDependencies">Automatically download all required dependencies</sys:String>
+    <sys:String x:Key="Instance.Modification.AutoDependencies.ToolTip">Download compatible required dependencies in one batch for this operation without individual prompts. Selected matching mod builds are not downloaded again. Optional dependencies are excluded; conflicts and unavailable builds still require review.</sys:String>
+    <sys:String x:Key="Instance.Modification.DownloadCount">{0}/{1} files completed</sys:String>
 </ResourceDictionary>
