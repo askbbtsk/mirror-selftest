@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xml:space="preserve">
-    <sys:String x:Key="Setup.About.ReleaseDescription">1.7.5 hotfix-1: smaller LiquidGlass Windows projections and native graphics bindings reduce executable size. Fixed background opacity in glass mode; glass, text and the launcher badge retain their opacity.</sys:String>
+    <sys:String x:Key="Setup.About.ReleaseDescription">1.7.6 hotfix-2: hides the main navigation glass bar when entering instance settings and other child pages, preventing overlap with the child title. Restores the bar when returning to the main pages. Includes the startup and search binding fixes from hotfix-1.</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Preset">Performance preset</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.0">Low power</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.1">Balanced</sys:String>
@@ -17,7 +17,7 @@
     <sys:String x:Key="Setup.Ui.LiquidGlass.FrameRate">Effect frame cap (30–240 FPS; far right is unlimited)</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Unlimited">Unlimited (may significantly increase power use)</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Confirm">Enable liquid glass?&#xA;Preset: {0}; effect frame cap: {1}.&#xA;{2}&#xA;This adds CPU/GPU, memory and battery costs. These are relative estimates, not device benchmarks or a smoothness guarantee. Screenshot-friendly background mode is the default. If live desktop refraction is enabled separately, the launcher is excluded from screenshots and recordings. No countdown is required.</sys:String>
-    <sys:String x:Key="Setup.Ui.LiquidGlass.DesktopConfirm">Live desktop refraction captures local monitor frames and continuously uses GPU/CPU resources. Frames are never saved or uploaded. To avoid recursive capture, Windows excludes the launcher from screenshots and recordings; the actual window stays open. Turn this option off to take a screenshot. Enable anyway?</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.DesktopConfirm">Live desktop refraction uses DXGI and GPU/CPU resources. Frames are never saved or uploaded, and WGC's yellow capture border is not used. The launcher remains excluded from screenshots and recordings to prevent recursion; turn this option off before taking a screenshot. Background opacity affects only the launcher background color and image/video, not the live desktop, glass, text or logo. Enable anyway?</sys:String>
 
     <sys:String x:Key="Setup.GameManage.ModIndex.Title">Mod dependency index</sys:String>
     <sys:String x:Key="Setup.GameManage.ModIndex.Description">Index every instance in all Minecraft folders discovered by PCL, including unselected and hidden instances. Shared mod folders with the same parser context are scanned once. Idle browsing does not build indexes; mod downloads still update them.</sys:String>
@@ -841,7 +841,7 @@
     <sys:String x:Key="Instance.Install.Action.StartReset">Reset</sys:String>
     <sys:String x:Key="Instance.Install.Error.OperationFailed">An instance installation operation failed. See the details below.</sys:String>
     <sys:String x:Key="Instance.Install.NoExtraInstall">No extra installation</sys:String>
-    <sys:String x:Key="Instance.Install.Reset.Message">You are resetting the current instance.&#xA;PCL Lite will re-download the files required for this instance from the internet and reinstall mod loaders (if any).&#xA;This operation will not lose your saves, mods, resource packs, etc.</sys:String>
+    <sys:String x:Key="Instance.Install.Reset.Message">You are resetting the current instance.&#xA;Back up the instance first. PCL Lite will download its required files again and reinstall its loaders; core files are backed up to PCLInstallBackups.&#xA;Saves, mods and resource packs are retained, but manual changes to the core JSON/JAR may be replaced.</sys:String>
     <sys:String x:Key="Instance.Install.Reset.Title">Reset this instance</sys:String>
 
     <!-- Instance.Export -->
@@ -3232,12 +3232,13 @@ This corroborates the current asset against the Release record; it does not veri
     <sys:String x:Key="Setup.Ui.Tahoe.State.Compatibility">Desktop capture is active. This device uses the blur compatibility material.</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Recovering">Desktop capture was interrupted. Recovering; unavailable areas use a static material.</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Suspended">Desktop capture is paused until the window is visible again.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Moving">Using static frosted material while moving or resizing; live desktop refraction resumes afterwards.</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Unsupported">Desktop capture is unsupported. Showing a static material.</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Failed">Desktop capture could not recover. Showing a static material. Toggle “Refract the desktop directly” to retry.</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Enable">Use the Liquid Glass interface</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Description">Independent from advanced materials. The default launcher-background refraction supports screenshots. Enabling requires performance confirmation; quality and effect frame rate can be adjusted below.</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Desktop">Live desktop refraction (excludes screenshots)</sys:String>
-    <sys:String x:Key="Setup.Ui.Tahoe.Desktop.Description">Refract the real desktop while keeping your background image or video. To hide the background, manually lower “Background / window opacity” above. With glass enabled, that slider affects only the background, leaving glass and text unchanged. Desktop sampling excludes the launcher from screenshots and recordings to prevent recursion; turning it off restores visibility.</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Desktop.Description">Refract the desktop through DXGI without WGC's yellow capture border. “Background / window opacity” changes only the launcher background color and image/video, not the live desktop, glass, text or logo. Material tint follows the launcher's light/dark theme. The launcher remains excluded from screenshots and recordings to prevent recursion; turning this option off restores visibility.</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Compatibility">Desktop sampling requires Windows 10 version 2004 or later. Unavailable capture uses a static material; devices without Pixel Shader 3.0 use blur.</sys:String>
 
     <!-- Setup.Ui.Basic -->
@@ -4228,4 +4229,23 @@ Current files will be overwritten (a .importbak copy is kept). Continue?</sys:St
     <sys:String x:Key="Instance.Modification.AutoDependencies">Automatically download all required dependencies</sys:String>
     <sys:String x:Key="Instance.Modification.AutoDependencies.ToolTip">Download compatible required dependencies in one batch for this operation without individual prompts. Selected matching mod builds are not downloaded again. Optional dependencies are excluded; conflicts and unavailable builds still require review.</sys:String>
     <sys:String x:Key="Instance.Modification.DownloadCount">{0}/{1} files completed</sys:String>
+    <sys:String x:Key="CommandPalette.Title">Search everywhere</sys:String>
+    <sys:String x:Key="CommandPalette.ToolTip">Search everywhere (Ctrl+K)</sys:String>
+    <sys:String x:Key="CommandPalette.Hint">Search instances, installed mods, settings or actions</sys:String>
+    <sys:String x:Key="CommandPalette.Close">Close search</sys:String>
+    <sys:String x:Key="CommandPalette.Results">Search results</sys:String>
+    <sys:String x:Key="CommandPalette.Empty">No matches. Try an instance name, mod filename or setting keyword.</sys:String>
+    <sys:String x:Key="CommandPalette.Keys">↑ ↓ Select · Enter Open · Esc Close · Up to 60 results</sys:String>
+    <sys:String x:Key="CommandPalette.Loading">Reading local instances and mods. Available results can already be opened…</sys:String>
+    <sys:String x:Key="CommandPalette.NoInstance">Select an instance to search installed mods. ↑ ↓ Select · Enter Open · Esc Close</sys:String>
+    <sys:String x:Key="CommandPalette.ScanFailed">Some local content could not be read. Check folder permissions or reopen search; available results still work.</sys:String>
+    <sys:String x:Key="CommandPalette.Error">Could not open this item. Check that its files still exist and try again.</sys:String>
+    <sys:String x:Key="CommandPalette.OpenInstance">Open instance management</sys:String>
+    <sys:String x:Key="CommandPalette.OpenPage">Open page</sys:String>
+    <sys:String x:Key="CommandPalette.LocateMod">Show in folder · {0}</sys:String>
+    <sys:String x:Key="CommandPalette.Instance">Instance</sys:String>
+    <sys:String x:Key="CommandPalette.Mod">Installed mod</sys:String>
+    <sys:String x:Key="CommandPalette.Setting">Setting</sys:String>
+    <sys:String x:Key="CommandPalette.Action">Action</sys:String>
+    <sys:String x:Key="CommandPalette.Disabled">Disabled</sys:String>
 </ResourceDictionary>

@@ -4,6 +4,8 @@
 
 ## 目录
 
+发布前 UI 检查见 [UI-SMOKE.md](UI-SMOKE.md)：新增原生交互控件会让 PR CI 和发布流程失败。
+
 | 文档 | 讲什么 | 什么时候看 |
 | --- | --- | --- |
 | [CONTRIBUTE.md](CONTRIBUTE.md) | 贡献指南：fork、构建、`update.json` 为什么不用改、代码规矩、PR 清单、常见坑 | **第一次提 PR 先看这个** |
@@ -13,6 +15,7 @@
 | [BUILD.md](BUILD.md) | 怎么编译、密钥怎么注入、怎么签名、怎么发 Release | 想自己构建一个能用的版本 |
 | [AZURE-LOGIN.md](AZURE-LOGIN.md) | 从零注册 Azure 应用，拿到自己的 `client_id` 走微软正版登录 | 想让正版登录用自己的应用 |
 | [MCP.md](MCP.md) | 内置 MCP 服务，让 AI 客户端直接操作启动器 | 想接 Claude / Cursor / Cherry Studio |
+| [COMMAND-PALETTE.md](COMMAND-PALETTE.md) | Ctrl+K 全局搜索：实例、当前实例模组、设置与常用操作 | 想用键盘快速定位功能 |
 | [LUNAR.md](LUNAR.md) | Lunar Client 启动链路：不启动 Lunar 启动器直接拉起游戏的完整事实、认证与账号文件 | 想排查 Lunar 启动失败、想改 Lunar 相关逻辑 |
 | [HOMEPAGE-LANG.md](HOMEPAGE-LANG.md) | 主页语言 API：同一份主页内容按语言展示不同内容，兼容原版主页协议 | 想写多语言主页、想给页面加语言分支 |
 | [../plugin_docs.md](../plugin_docs.md) | 插件 SDK、API、签名、Mixin 与测试指南 | 开发或排查插件 |

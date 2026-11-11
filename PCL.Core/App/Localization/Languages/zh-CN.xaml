@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xml:space="preserve">
-    <sys:String x:Key="Setup.About.ReleaseDescription">1.7.5 hotfix-1：精简 LiquidGlass 的 Windows 接口依赖，减小程序体积；修复液态玻璃开启时背景不透明度调低后背景没有变淡的问题，玻璃、文字和徽标保持不变。</sys:String>
+    <sys:String x:Key="Setup.About.ReleaseDescription">1.7.6 hotfix-2：修复进入实例设置等子页面后，顶部主导航玻璃栏没有消失、与子页标题重叠的问题；返回主页时正确恢复玻璃栏。包含 hotfix-1 的启动与搜索事件绑定修复。</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Preset">性能预设</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.0">低消耗</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Preset.1">均衡</sys:String>
@@ -17,7 +17,7 @@
     <sys:String x:Key="Setup.Ui.LiquidGlass.FrameRate">效果最高帧率（30–240 FPS，最右为不限制）</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Unlimited">不限制（可能显著增加功耗）</sys:String>
     <sys:String x:Key="Setup.Ui.LiquidGlass.Confirm">是否开启液态玻璃？&#xA;预设：{0}；效果帧率上限：{1}。&#xA;{2}&#xA;会增加 CPU/GPU、内存和电量开销；这些是相对预估，不是设备实测或流畅度保证。默认使用可截图的背景模式。若另行开启实时桌面折射，启动器会从截图和录屏中排除。无需等待，确认后立即生效。</sys:String>
-    <sys:String x:Key="Setup.Ui.LiquidGlass.DesktopConfirm">实时桌面折射需要采集本机显示器画面并持续使用 GPU/CPU，画面不会保存或上传。为避免递归采集，Windows 会把启动器从系统截图和录屏中排除；窗口仍然开着。需要截图时关闭此选项即可。仍要启用吗？</sys:String>
+    <sys:String x:Key="Setup.Ui.LiquidGlass.DesktopConfirm">实时桌面折射通过 DXGI 采集本机显示器画面，持续使用 GPU/CPU，不保存或上传画面，也不使用 WGC 的黄色采集边框。为避免递归，启用期间启动器仍从系统截图和录屏中排除；需要截图时请先关闭此选项。背景不透明度只影响启动器底色和图片/视频，不改变实时桌面、玻璃、文字和徽标。仍要启用吗？</sys:String>
 
     <sys:String x:Key="Setup.GameManage.ModIndex.Title">模组依赖索引</sys:String>
     <sys:String x:Key="Setup.GameManage.ModIndex.Description">为 PCL 已发现的所有 Minecraft 目录中的实例创建索引，包括未选中和隐藏的实例。相同解析环境下的共享模组目录只扫描一次。待机和浏览时不自动补建；下载模组后仍自动更新。</sys:String>
@@ -841,7 +841,7 @@
     <sys:String x:Key="Instance.Install.Action.StartReset">开始重置</sys:String>
     <sys:String x:Key="Instance.Install.Error.OperationFailed">实例安装操作失败。请查看错误详情。</sys:String>
     <sys:String x:Key="Instance.Install.NoExtraInstall">无附加安装</sys:String>
-    <sys:String x:Key="Instance.Install.Reset.Message">你正在重置当前实例。&#xA;PCL Lite 将会重新联网下载该实例所需的文件，并重新安装模组加载器（如有）。&#xA;此操作不会丢失你的存档、模组、资源包等。</sys:String>
+    <sys:String x:Key="Instance.Install.Reset.Message">你正在重置当前实例。&#xA;请先备份实例。PCL Lite 将重新联网下载所需文件，并重新安装模组加载器（如有）；实例核心文件会备份到 PCLInstallBackups。&#xA;此操作保留存档、模组和资源包，但手动修改的核心 JSON/JAR 可能被重新安装的内容替换。</sys:String>
     <sys:String x:Key="Instance.Install.Reset.Title">重置此实例</sys:String>
 
     <!-- Instance.Export -->
@@ -3232,12 +3232,13 @@ Release 发布时间：{2}
     <sys:String x:Key="Setup.Ui.Tahoe.State.Compatibility">桌面采样正常，当前设备使用模糊兼容材质。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Recovering">桌面采样中断，正在尝试恢复；未就绪区域使用静态材质。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Suspended">桌面采样已暂停；窗口恢复可见后继续。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.State.Moving">移动或调整窗口时使用静态磨砂；松开后恢复实时桌面折射。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Unsupported">系统不支持桌面采样，当前显示静态材质。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.State.Failed">桌面采样恢复失败，当前显示静态材质；可重新开启“直接折射桌面”重试。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Enable">使用液态玻璃界面</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Description">独立的液态玻璃效果，不属于高级材质。默认折射启动器背景，可正常截图；开启前需确认性能开销，下方可调整画质与帧率。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Desktop">实时桌面折射（会排除截图）</sys:String>
-    <sys:String x:Key="Setup.Ui.Tahoe.Desktop.Description">对窗口后的真实桌面进行折射，开启时保留背景图片和视频。需要隐藏背景时手动降低上方“背景 / 窗口不透明度”；玻璃模式下该滑块只影响背景，不淡化玻璃和文字。为避免递归，采样期间启动器会从截图与录屏中排除，关闭后恢复。</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.Desktop.Description">使用 DXGI 实时折射桌面，不产生 WGC 黄色采集边框。上方“背景 / 窗口不透明度”只调节启动器底色和图片/视频，不调节实时桌面采样、玻璃、文字或徽标；深浅色材质跟随启动器主题。为避免递归，采样期间仍排除启动器截图与录屏，关闭此选项后恢复。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Compatibility">桌面采样需要 Windows 10 2004 或更高版本。采样不可用时显示静态材质；不支持 Pixel Shader 3.0 时使用模糊材质。</sys:String>
 
     <!-- Setup.Ui.Basic -->
@@ -4231,4 +4232,23 @@ Lunar 会话已于 {2} 过期，进游戏后由 IPC 续期</sys:String>
     <sys:String x:Key="Instance.Modification.AutoDependencies">自动下载全部必需依赖</sys:String>
     <sys:String x:Key="Instance.Modification.AutoDependencies.ToolTip">本次修改自动批量下载兼容目标环境的必需前置，不逐项询问；已选中的同版本模组不重复下载。不会加入可选依赖，冲突和无兼容构建仍会提示。</sys:String>
     <sys:String x:Key="Instance.Modification.DownloadCount">已完成 {0}/{1} 个文件</sys:String>
+    <sys:String x:Key="CommandPalette.Title">全局搜索</sys:String>
+    <sys:String x:Key="CommandPalette.ToolTip">全局搜索（Ctrl+K）</sys:String>
+    <sys:String x:Key="CommandPalette.Hint">搜索实例、当前实例的模组、设置或操作</sys:String>
+    <sys:String x:Key="CommandPalette.Close">关闭搜索</sys:String>
+    <sys:String x:Key="CommandPalette.Results">搜索结果</sys:String>
+    <sys:String x:Key="CommandPalette.Empty">没有匹配结果，请试试实例名称、模组文件名或设置关键词。</sys:String>
+    <sys:String x:Key="CommandPalette.Keys">↑ ↓ 选择 · Enter 打开 · Esc 关闭 · 最多显示 60 项</sys:String>
+    <sys:String x:Key="CommandPalette.Loading">正在读取本地实例与模组，已有结果可以直接打开…</sys:String>
+    <sys:String x:Key="CommandPalette.NoInstance">尚未选择实例；选择后可搜索已安装模组。↑ ↓ 选择 · Enter 打开 · Esc 关闭</sys:String>
+    <sys:String x:Key="CommandPalette.ScanFailed">部分本地内容无法读取，请检查目录权限或重新打开搜索；已有结果仍可使用。</sys:String>
+    <sys:String x:Key="CommandPalette.Error">无法打开所选项目，请检查文件是否存在后重试。</sys:String>
+    <sys:String x:Key="CommandPalette.OpenInstance">打开实例管理</sys:String>
+    <sys:String x:Key="CommandPalette.OpenPage">打开页面</sys:String>
+    <sys:String x:Key="CommandPalette.LocateMod">在文件夹中定位 · {0}</sys:String>
+    <sys:String x:Key="CommandPalette.Instance">实例</sys:String>
+    <sys:String x:Key="CommandPalette.Mod">已安装模组</sys:String>
+    <sys:String x:Key="CommandPalette.Setting">设置</sys:String>
+    <sys:String x:Key="CommandPalette.Action">操作</sys:String>
+    <sys:String x:Key="CommandPalette.Disabled">已禁用</sys:String>
 </ResourceDictionary>

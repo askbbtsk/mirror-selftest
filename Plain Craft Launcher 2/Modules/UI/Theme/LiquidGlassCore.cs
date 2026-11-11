@@ -6,10 +6,10 @@ using PCL.Core.App;
 namespace PCL;
 
 /// <summary>
-/// Native optical material. WGC provides desktop pixels to an independent sibling
+/// Native optical material. DXGI provides desktop pixels to an independent sibling
 /// source; the existing shader refracts that source without sampling foreground UI.
 /// </summary>
-public static class LiquidGlassCore
+public static partial class LiquidGlassCore
 {
     private static FormMain? _window;
     private static bool _applied;
@@ -29,7 +29,7 @@ public static class LiquidGlassCore
     public static bool IsDesktopBackdropRequested => PCL.Core.UI.LiquidGlassPerformance.ShouldCaptureDesktop(
         Config.Preference.TahoeGlass.IsEnabled, Config.Preference.TahoeGlass.PerformanceConsent,
         Config.Preference.TahoeGlass.UseDesktopBackdrop, Config.Preference.TahoeGlass.DesktopCaptureConsent);
-    public static FrameworkElement? BackdropSource => IsEnabled &&
+    public static FrameworkElement? BackdropSource => IsEnabled && !_windowMoving &&
         (!IsDesktopBackdropRequested || _desktopCapture?.HasFrame == true)
             ? IsDesktopBackdropRequested ? _window?.TahoeDesktopImage : _window?.TahoeBackdrop : null;
     public static event EventHandler? Changed;
@@ -51,6 +51,7 @@ public static class LiquidGlassCore
             if (_window != window)
             {
                 _window = window;
+                AttachInteraction(window);
                 _desktopCapture = new TahoeDesktopCapture(window, window.PanForm, window.TahoeDesktopImage,
                     window.TransformRotate, window.TransformPos, new TahoeCapturePlatform(LogCapture), LogCapture);
                 _desktopCapture.StateChanged += OnCaptureStateChanged;
@@ -58,6 +59,8 @@ public static class LiquidGlassCore
                 window.PanMainLeft.SizeChanged += OnSidebarSizeChanged;
                 window.PanTitleSelectViewport.SizeChanged += OnTitleSizeChanged;
                 window.PanTitle.SizeChanged += OnTitleSizeChanged;
+                window.PanTitleMain.IsVisibleChanged += OnTitleNavigationChanged;
+                window.PanTitleMain.IsHitTestVisibleChanged += OnTitleNavigationChanged;
                 SystemParameters.StaticPropertyChanged += OnSystemSettingsChanged;
             }
 
@@ -77,7 +80,8 @@ public static class LiquidGlassCore
             }
             Appearance.IsEnabled = IsEnabled;
             Appearance.IsDesktopRequested = IsDesktopBackdropRequested;
-            string captureState = (_desktopCapture?.State ?? TahoeCaptureState.Stopped).ToString();
+            string captureState = _windowMoving && IsDesktopBackdropRequested ? "Moving"
+                : (_desktopCapture?.State ?? TahoeCaptureState.Stopped).ToString();
             if (_desktopCapture?.State == TahoeCaptureState.Live && !window.TahoeWindowGlass.IsRefractionActive)
                 captureState = "Compatibility";
             Appearance.DesktopStatus = PCL.Core.App.Localization.Lang.Text("Setup.Ui.Tahoe.State." + captureState);
@@ -145,10 +149,11 @@ public static class LiquidGlassCore
         var foreground = new SolidColorBrush(SystemParameters.HighContrast ? SystemColors.WindowTextColor
             : dark ? Color.FromRgb(244, 246, 251) : Color.FromRgb(29, 35, 44));
         foreground.Freeze();
-        _desktopCapture!.Apply(IsDesktopBackdropRequested);
+        _desktopCapture!.SetInteractiveMove(_windowMoving);
+        _desktopCapture.Apply(IsDesktopBackdropRequested);
         window.TahoeBackdrop.Visibility = Visibility.Visible;
         window.TahoeWallpaperHost.Visibility = Visibility.Visible;
-        window.TahoeDesktopImage.Visibility = IsDesktopBackdropRequested ? Visibility.Visible : Visibility.Collapsed;
+        window.TahoeDesktopImage.Visibility = IsDesktopBackdropRequested && !_windowMoving ? Visibility.Visible : Visibility.Collapsed;
         ThemeManager.RefreshBackground();
         ApplyOpacity(Config.Preference.Theme.WindowOpacity);
         SetBrush(window, "TahoeText", dark ? "#F2F3F5" : "#252830");
@@ -217,10 +222,10 @@ public static class LiquidGlassCore
     private static void ApplySurface(TahoeGlassSurface surface, bool dark, double opacity)
     {
         surface.BackdropSource = BackdropSource;
-        surface.TintColor = SystemParameters.HighContrast ? SystemColors.WindowColor
-            : dark ? Color.FromRgb(23, 29, 39) : Colors.White;
-        surface.TintOpacity = SystemParameters.HighContrast ? 1 : opacity;
-        surface.ForceCompatibility = SystemParameters.HighContrast;
+        surface.TintColor = SystemParameters.HighContrast ? SystemColors.WindowColor : PCL.Core.UI.LiquidGlassMaterial.Tint(dark);
+        surface.TintOpacity = SystemParameters.HighContrast ? 1
+            : PCL.Core.UI.LiquidGlassMaterial.Opacity(dark, IsDesktopBackdropRequested, opacity);
+        surface.ForceCompatibility = SystemParameters.HighContrast || _windowMoving;
         surface.BlurRadius = Profile.BlurRadius;
         surface.Dispersion = Profile.Dispersion;
         surface.HighlightStrength = Profile.Highlight;
@@ -295,8 +300,18 @@ public static class LiquidGlassCore
         if (IsEnabled && _window is { } window) UpdateTitleGlass(window);
     }
 
+    private static void OnTitleNavigationChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (IsEnabled && _window is { } window) UpdateTitleGlass(window);
+    }
+
     private static void UpdateTitleGlass(FormMain window)
     {
+        // The main navigation fades out before its layout is collapsed. Its independent
+        // glass surface must leave immediately as well, rather than remain over the child title.
+        bool showNavigation = window.PanTitleMain.IsVisible && window.PanTitleMain.IsHitTestVisible;
+        window.TahoeToolbar.Visibility = showNavigation ? Visibility.Visible : Visibility.Collapsed;
+        if (!showNavigation) return;
         var viewport = window.PanTitleSelectViewport;
         if (!viewport.IsLoaded || viewport.ActualWidth <= 0) return;
         Point origin = viewport.TranslatePoint(new Point(), window.PanTitle);
@@ -322,6 +337,7 @@ public static class LiquidGlassCore
 
     private static void OnClosed(object? sender, EventArgs e)
     {
+        DetachInteraction();
         SystemParameters.StaticPropertyChanged -= OnSystemSettingsChanged;
         if (_window is not null)
         {
@@ -329,6 +345,8 @@ public static class LiquidGlassCore
             _window.PanMainLeft.SizeChanged -= OnSidebarSizeChanged;
             _window.PanTitleSelectViewport.SizeChanged -= OnTitleSizeChanged;
             _window.PanTitle.SizeChanged -= OnTitleSizeChanged;
+            _window.PanTitleMain.IsVisibleChanged -= OnTitleNavigationChanged;
+            _window.PanTitleMain.IsHitTestVisibleChanged -= OnTitleNavigationChanged;
         }
         OriginalIconThemes.Clear();
         OriginalThemeResources.Clear();
