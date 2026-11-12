@@ -76,7 +76,7 @@ public static partial class ModLunar
 
             Log($"正在登录 Lunar 后端（账号 {name}）…");
             await client.ConnectAsync(token, uuid, name).ConfigureAwait(false);
-            Log($"Lunar 后端已连上，好友 {client.Friends.Count} 个");
+            Log($"Lunar 好友系统已连上，好友 {client.Friends.Count} 个");
         }
         catch (Exception ex) when (ex is LunarSocialException or OperationCanceledException)
         {
@@ -363,6 +363,8 @@ public static partial class ModLunar
                     StatusText = forcedExit ? Lang.Text("Lunar.Status.Stopped")
                         : exitCode == 0 ? Lang.Text("Lunar.Status.Exited") : Lang.Text("Lunar.Status.Crashed", exitCode);
                     DetailText = forcedExit || exitCode == 0 ? "" : Lang.Text("Lunar.Status.CrashedDesc");
+                    if (!forcedExit && exitCode != 0 && PCL.Core.App.Lunar.LunarCrashDiagnostics.IsNativeMemoryFailure(tail))
+                        DetailText = Lang.Text("Lunar.Status.NativeMemoryFailure");
                     // Publish availability only after final state is complete. No UI callbacks under the gate.
                     _isBusy = false;
                 });
@@ -421,7 +423,7 @@ public static partial class ModLunar
             retiredIpc = _ipcServer;
             _ipcServer = null;
             StatusText = Lang.Text("Lunar.Status.Failed");
-            DetailText = ex.Message;
+            DetailText = GetLaunchFailureMessage(ex);
             _isBusy = false;
             });
             if (!completed) return;
@@ -430,10 +432,17 @@ public static partial class ModLunar
             QueueSessionNotification(launchSession, () =>
             {
                 StateChanged?.Invoke();
-                ModBase.Log(ex, "[Lunar] 启动失败", ModBase.LogLevel.Msgbox, userSummary: ex.Message);
+                ModBase.Log(ex, "[Lunar] 启动失败", ModBase.LogLevel.Msgbox, userSummary: GetLaunchFailureMessage(ex));
             }, completed: true);
         }
     }
+
+    private static string GetLaunchFailureMessage(Exception error) =>
+        error is LunarNativeFilesUnavailableException unavailable
+            ? Lang.Text("Lunar.Error.NativesInUse",
+                string.Join("、", unavailable.Files.Take(6).Select(Path.GetFileName))
+                + (unavailable.Files.Count > 6 ? $"……另有 {unavailable.Files.Count - 6} 个文件" : string.Empty))
+            : error.Message;
 
 
     /// <summary>
