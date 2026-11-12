@@ -16,6 +16,7 @@ public static partial class LiquidGlassCore
     private static bool _refreshing;
     private static Visibility _gradientVisibility, _imageVisibility;
     private static double _shadowOpacity, _radiusX, _radiusY;
+    private static Visibility _windowShadowVisibility;
     private static string? _lastDiagnostics;
     private static Geometry? _originalSidebarClip;
     private static TahoeDesktopCapture? _desktopCapture;
@@ -29,7 +30,7 @@ public static partial class LiquidGlassCore
     public static bool IsDesktopBackdropRequested => PCL.Core.UI.LiquidGlassPerformance.ShouldCaptureDesktop(
         Config.Preference.TahoeGlass.IsEnabled, Config.Preference.TahoeGlass.PerformanceConsent,
         Config.Preference.TahoeGlass.UseDesktopBackdrop, Config.Preference.TahoeGlass.DesktopCaptureConsent);
-    public static FrameworkElement? BackdropSource => IsEnabled && !_windowMoving &&
+    public static FrameworkElement? BackdropSource => IsEnabled &&
         (!IsDesktopBackdropRequested || _desktopCapture?.HasFrame == true)
             ? IsDesktopBackdropRequested ? _window?.TahoeDesktopImage : _window?.TahoeBackdrop : null;
     public static event EventHandler? Changed;
@@ -94,6 +95,8 @@ public static partial class LiquidGlassCore
                 foreach (var surface in GlassSurfaces(window))
                 {
                     surface.BlurRadius = Profile.BlurRadius;
+                    surface.FrostRadius = PCL.Core.UI.LiquidGlassMaterial.FrostRadius(Config.Preference.TahoeGlass.FrostRadius);
+                    surface.RefractionStrength = PCL.Core.UI.LiquidGlassMaterial.RefractionStrength(Config.Preference.TahoeGlass.RefractionStrength);
                     surface.Dispersion = Profile.Dispersion;
                     surface.HighlightStrength = Profile.Highlight;
                 }
@@ -139,6 +142,7 @@ public static partial class LiquidGlassCore
         _gradientVisibility = window.ImgTitleGradient.Visibility;
         _imageVisibility = window.ImgTitle.Visibility;
         _shadowOpacity = window.RectLeftShadow.Opacity;
+        _windowShadowVisibility = window.PanWindowShadow.Visibility;
         _radiusX = window.RectForm.RadiusX;
         _radiusY = window.RectForm.RadiusY;
         _originalSidebarClip = window.PanMainLeft.Clip;
@@ -156,7 +160,7 @@ public static partial class LiquidGlassCore
         _desktopCapture.Apply(IsDesktopBackdropRequested);
         window.TahoeBackdrop.Visibility = Visibility.Visible;
         window.TahoeWallpaperHost.Visibility = Visibility.Visible;
-        window.TahoeDesktopImage.Visibility = IsDesktopBackdropRequested && !_windowMoving ? Visibility.Visible : Visibility.Collapsed;
+        window.TahoeDesktopImage.Visibility = IsDesktopBackdropRequested ? Visibility.Visible : Visibility.Collapsed;
         ThemeManager.RefreshBackground();
         ApplyOpacity(Config.Preference.Theme.WindowOpacity);
         SetBrush(window, "TahoeText", dark ? "#F2F3F5" : "#252830");
@@ -201,6 +205,7 @@ public static partial class LiquidGlassCore
         window.ImgTitleGradient.Visibility = Visibility.Hidden;
         window.ImgTitle.Visibility = Visibility.Hidden;
         window.RectLeftShadow.Opacity = 0;
+        window.PanWindowShadow.Visibility = Visibility.Collapsed;
         window.RectForm.RadiusX = window.RectForm.RadiusY = 22;
         UpdateSidebarClip(window);
 
@@ -229,11 +234,12 @@ public static partial class LiquidGlassCore
         surface.TintColor = SystemParameters.HighContrast ? SystemColors.WindowColor : PCL.Core.UI.LiquidGlassMaterial.Tint(dark);
         surface.TintOpacity = SystemParameters.HighContrast ? 1
             : PCL.Core.UI.LiquidGlassMaterial.Opacity(dark, IsDesktopBackdropRequested, opacity);
-        surface.ForceCompatibility = SystemParameters.HighContrast || _windowMoving;
+        surface.ForceCompatibility = SystemParameters.HighContrast;
         surface.BlurRadius = Profile.BlurRadius;
+        surface.FrostRadius = PCL.Core.UI.LiquidGlassMaterial.FrostRadius(Config.Preference.TahoeGlass.FrostRadius);
         surface.Dispersion = Profile.Dispersion;
         surface.HighlightStrength = Profile.Highlight;
-        surface.RefractionStrength = .05;
+        surface.RefractionStrength = PCL.Core.UI.LiquidGlassMaterial.RefractionStrength(Config.Preference.TahoeGlass.RefractionStrength);
         surface.Visibility = Visibility.Visible;
         surface.RefreshSampling();
     }
@@ -258,6 +264,7 @@ public static partial class LiquidGlassCore
         window.ImgTitleGradient.Visibility = _gradientVisibility;
         window.ImgTitle.Visibility = _imageVisibility;
         window.RectLeftShadow.Opacity = _shadowOpacity;
+        window.PanWindowShadow.Visibility = _windowShadowVisibility;
         window.RectForm.RadiusX = _radiusX;
         window.RectForm.RadiusY = _radiusY;
         window.PanMainLeft.Clip = _originalSidebarClip;

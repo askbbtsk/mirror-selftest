@@ -16,6 +16,90 @@ namespace PCL.Core.Test.UI;
 public sealed class TahoeDesktopCaptureTests
 {
     [STATestMethod]
+    public void LiveMoveKeepsSessionBitmapAndNewFramesInsteadOfFreezingTheLastImage()
+    {
+        WithCapture((capture, platform, window, image) =>
+        {
+            platform.SupportsLiveMove = true;
+            capture.Apply(true);
+            var session = platform.Sessions.Single();
+            session.Present(11);
+            PumpUntil(() => capture.HasFrame);
+            var bitmap = image.Source;
+            capture.SetInteractiveMove(true);
+            Assert.IsTrue(session.Moving);
+            Assert.IsFalse(session.Disposed);
+            Assert.AreEqual(TahoeCaptureState.Live, capture.State);
+            for (byte value = 20; value < 25; value++)
+            {
+                int version = session.Region!.Version;
+                window.Left += 2;
+                PumpFor(TimeSpan.FromMilliseconds(8));
+                Assert.AreEqual(version, session.Region.Version, "Position-only moves must not reject pending frame versions.");
+                session.Present(value);
+                int expected = value - 18;
+                PumpUntil(() => session.Completed >= expected);
+                Assert.AreSame(bitmap, image.Source, "Moving must not recreate a same-sized bitmap.");
+                var pixels = new byte[4];
+                ((WriteableBitmap)image.Source!).CopyPixels(new Int32Rect(0, 0, 1, 1), pixels, 4, 0);
+                Assert.AreEqual(value, pixels[0], "Fresh frames must remain visible while moving.");
+            }
+            capture.SetInteractiveMove(false);
+            Assert.IsFalse(session.Moving);
+            Assert.AreEqual(1, platform.Creations);
+        });
+    }
+
+    [STATestMethod]
+    public void SamplerReceivesTheViewportClipRadiiInDevicePixels()
+    {
+        WithCapture((capture, platform, window, _) =>
+        {
+            var viewport = (Grid)window.Content;
+            var clip = new RectangleGeometry(new Rect(viewport.RenderSize), 6, 6);
+            viewport.Clip = clip;
+            capture.Apply(true);
+            var dpi = VisualTreeHelper.GetDpi(viewport);
+            // FormMain changes its clip after starting capture when enabling glass.
+            // No resize or move is required to update the helper's native shape.
+            clip.RadiusX = 22;
+            clip.RadiusY = 17;
+            PumpUntil(() => Math.Abs(platform.Sessions.Single().Region!.RadiusX - 22 * dpi.DpiScaleX) < 0.001);
+            var region = platform.Sessions.Single().Region!;
+            Assert.AreEqual(22 * dpi.DpiScaleX, region.RadiusX, 0.001);
+            Assert.AreEqual(17 * dpi.DpiScaleY, region.RadiusY, 0.001);
+            capture.Apply(false);
+            clip.RadiusX = 30;
+            PumpFor(TimeSpan.FromMilliseconds(10));
+            Assert.AreEqual(TahoeCaptureState.Stopped, capture.State);
+            Assert.AreEqual(1, platform.Creations, "A retired clip observer must not restart capture.");
+        });
+    }
+
+    [STATestMethod]
+    public void SamplerReadsTheParentClipUsedByTheMainWindowAndDefaultsToRectangular()
+    {
+        WithCapture((capture, platform, window, _) =>
+        {
+            var viewport = (Grid)window.Content;
+            window.Content = null;
+            var parent = new Border { Child = viewport,
+                Clip = new RectangleGeometry(new Rect(viewport.RenderSize), 22, 22) };
+            window.Content = parent;
+            window.UpdateLayout();
+            PumpFor(TimeSpan.FromMilliseconds(10));
+            capture.Apply(true);
+            var dpi = VisualTreeHelper.GetDpi(viewport);
+            Assert.AreEqual(22 * dpi.DpiScaleX, platform.Sessions.Single().Region!.RadiusX, 0.001);
+            capture.Apply(false);
+            parent.Clip = null;
+            capture.Apply(true);
+            Assert.AreEqual(0d, platform.Sessions.Last().Region!.RadiusX);
+            Assert.AreEqual(0d, platform.Sessions.Last().Region!.RadiusY);
+        });
+    }
+
+    [STATestMethod]
     public void RetiredErrorsAndFramesCannotAffectReplacementSession()
     {
         WithCapture((capture, platform, _, image) =>
@@ -356,6 +440,7 @@ public sealed class TahoeDesktopCaptureTests
     private sealed class FakePlatform : ITahoeCapturePlatform
     {
         public bool IsSupported { get; set; } = true;
+        public bool SupportsLiveMove { get; set; }
         public bool FailCreation { get; set; }
         public int Creations { get; private set; }
         public uint Affinity { get; private set; }
@@ -392,6 +477,8 @@ public sealed class TahoeDesktopCaptureTests
 
     private sealed class FakeSession(IntPtr monitor, Action<TahoeCaptureFrame, Action> present, Action<Exception> failed) : ITahoeMonitorCapture
     {
+        public bool Moving { get; private set; }
+        public void SetInteractiveMove(bool moving) => Moving = moving;
         public IntPtr Monitor { get; } = monitor;
         public TahoeCaptureRegion? Region { get; private set; }
         public bool Disposed { get; private set; }
