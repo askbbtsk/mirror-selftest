@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="docs/assets/icon-256.png" alt="PCL Lite" width="128" height="128" />
+
 # PCL Lite
 
 Preface: PCL and its guard squad keep saying we "touched the cake", and hand out labels while they're at it. I'd like to know — does this hat factory have some grudge against the bakery? How come the hat factory is the one always touching the cake?
@@ -15,7 +17,7 @@ Preface: PCL and its guard squad keep saying we "touched the cake", and hand out
 [Download](https://github.com/askbbtsk/pcl-lite/releases) |
 [Documentation](docs/) |
 [License](#-license) |
-[Submit issues](https://github.com/askbbtsk/pcl-lite/issues/new)
+[Submit issues](https://github.com/askbbtsk/pcl-lite/issues/new/choose) | [Issue guide](docs/ISSUES.md)
 
 </div>
 
@@ -107,3 +109,13 @@ Reference: https://zhuanlan.zhihu.com/p/347828430
 
 Thanks to this person.
 Postscript: Longmao, you dumbass — can you please stop milking money out of themes?
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=askbbtsk%2Fpcl-lite&amp;type=date&amp;legend=top-left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=askbbtsk/pcl-lite&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=askbbtsk/pcl-lite&amp;type=date&amp;legend=top-left" />
+    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=askbbtsk/pcl-lite&amp;type=date&amp;legend=top-left" />
+  </picture>
+</a>

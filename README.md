@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="docs/assets/icon-256.png" alt="PCL Lite" width="128" height="128" />
+
 # PCL Lite
 
 前言：pcl和它的护卫队天天说动了蛋糕，顺手扣帽子，我想知道pcl这个帽子工厂和烘焙店是有仇吗 怎么帽子工厂天天动蛋糕？
@@ -15,7 +17,7 @@
 [下载](https://github.com/askbbtsk/pcl-lite/releases) |
 [文档](docs/) |
 [许可证](#-许可证) |
-[提交问题](https://github.com/askbbtsk/pcl-lite/issues/new)
+[提交问题](https://github.com/askbbtsk/pcl-lite/issues/new/choose) | [Issue 指南](docs/ISSUES.md)
 
 </div>
 
@@ -105,3 +107,13 @@ PCL Lite 始终建议使用最新版本的操作系统以获得最佳体验。
 
 感谢这个人
 后记:龙猫你个傻逼能不能不要用主题圈钱啊
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=askbbtsk%2Fpcl-lite&amp;type=date&amp;legend=top-left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=askbbtsk/pcl-lite&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=askbbtsk/pcl-lite&amp;type=date&amp;legend=top-left" />
+    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=askbbtsk/pcl-lite&amp;type=date&amp;legend=top-left" />
+  </picture>
+</a>
