@@ -10,32 +10,16 @@ PCL Lite 站在很多人的肩膀上。这份清单列出直接借用了代码�
 ### PCL（Plain Craft Launcher）
 
 
-### PCL-Symbio-Edition
+### BedrockBoot / BedrockLauncher.Core
 
-- 作者：Hydrogen-Peroxide
-- 许可证：Apache-2.0
-- 仓库：<https://github.com/Hydrogen-Peroxide/PCL-Symbio-Edition>
-- 关系：**基岩版（下载 + 安装 + 启动）** 部分移植自此项目。
-
-  具体范围：
-  - `PCL.Core/Link/Bedrock/BedrockService.cs` —— 检测已安装的基岩版并启动
-    （商店版走 `shell:appsFolder\<PackageFamilyName>!<AppId>`、GDK 便携版直接运行目录内的
-    `Minecraft.Windows.exe`、进程名 `Minecraft.Windows` / `Minecraft.Win10.DX11`、
-    存档目录 `%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\...`）。
-  - `Plain Craft Launcher 2/Modules/Minecraft/ModBedrockUwp.cs` —— 商店包的 FE3 下载地址解析、
-    清单改写、开发者模式检测、依赖补全、`Add-AppxPackage` 注册。
-  - `Plain Craft Launcher 2/Modules/Minecraft/ModBedrockGdk.cs` —— `.msixvc`（XVC 容器）的
-    解密与解包。
-  - `Plain Craft Launcher 2/Modules/Minecraft/ModBedrockDownload.cs` /
-    `ModBedrockInstaller.cs` —— 下载与安装编排，按 PCL Lite 的结构重写。
-
-  与上游的差异：GDK 版**不做 DLL 注入**（不移植 `ModBedrockLoader` / `ModBedrockMods`），
-  解包后直接运行主程序；内容密钥（CIK）不写进源码，构建时通过环境变量
-  `PCL_BEDROCK_RELEASE_CIK` / `PCL_BEDROCK_PREVIEW_CIK` 注入（见 `docs/BUILD.md`），
-  未注入时下载页会明确提示「无法解包」，而不是静默失败。
-
-  依据 Apache-2.0 第 4 条，此移植部分仍受 Apache-2.0 约束；本项目整体许可证不变。
-  Apache-2.0 全文见仓库根目录的 [`LICENSE-APACHE`](../LICENSE-APACHE)。
+- 作者：Round Studio 及相应贡献者。
+- 仓库：<https://github.com/Round-Studio/BedrockLauncher.Core>、
+  <https://github.com/Round-Studio/BedrockBoot>。
+- 感谢上述项目为基岩版下载、安装、容器解析及解密功能提供的参考与代码来源。
+- BedrockLauncher.Core 历史 MIT 版本：
+  [`f262eb7af2e6e11665ef51d9b998c42819ee0bb3`](https://github.com/Round-Studio/BedrockLauncher.Core/tree/f262eb7af2e6e11665ef51d9b998c42819ee0bb3)。
+  `Copyright (c) 2025 Round Studio`；该历史版本的许可全文保留在
+  [`LICENSE-BEDROCKLAUNCHER-MIT`](../LICENSE-BEDROCKLAUNCHER-MIT)。
 
 ## 二、第三方库（NuGet）
 

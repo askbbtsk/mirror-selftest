@@ -192,6 +192,7 @@ public partial class MyCard : AnimatedBackgroundGrid
 
     private void MyCard_MouseEnter(object sender, MouseEventArgs e)
     {
+        if (ThemeControlRegistry.HasTemplate(this)) return;
         if (TahoeThemeManager.IsEnabled) return;
         if (!HasMouseAnimation)
             return;
@@ -211,6 +212,7 @@ public partial class MyCard : AnimatedBackgroundGrid
 
     private void MyCard_MouseLeave(object sender, MouseEventArgs e)
     {
+        if (ThemeControlRegistry.HasTemplate(this)) return;
         if (TahoeThemeManager.IsEnabled) return;
         if (!HasMouseAnimation)
             return;
@@ -355,6 +357,7 @@ public partial class MyCard : AnimatedBackgroundGrid
             if (field == value)
                 return;
             field = value;
+            ThemeControlRegistry.RefreshState(this);
             if (SwapControl is null)
                 return;
 
