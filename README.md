@@ -9,6 +9,10 @@
 前言：pcl和它的护卫队天天说动了蛋糕，顺手扣帽子，我想知道pcl这个帽子工厂和烘焙店是有仇吗 怎么帽子工厂天天动蛋糕？
 [神秘文章来自cubk](https://github.com/askbbtsk/pcl-lite/blob/main/readmedlc.md)
 
+[恶俗维基相关条目](https://esu.lol/%E5%B0%B9%E6%B5%B7%E8%88%AA)
+
+<img src="https://repobeats.axiom.co/api/embed/9eeaaa6c831dc44bdc2f264bc4126460aceb8518.svg" alt="PCL Lite 仓库活动统计" title="Repobeats 仓库活动统计" width="100%" />
+
 [![Stars](https://img.shields.io/github/stars/askbbtsk/pcl-lite?style=for-the-badge&logo=github&labelColor=444444&color=eac54f)](https://github.com/askbbtsk/pcl-lite/stargazers)
 [![Release](https://img.shields.io/github/v/release/askbbtsk/pcl-lite?include_prereleases&label=release&logo=github&style=for-the-badge)](https://github.com/askbbtsk/pcl-lite/releases)
 [![Downloads](https://img.shields.io/github/downloads/askbbtsk/pcl-lite/total?style=for-the-badge&logo=github&labelColor=444444&color=1F883D)](https://github.com/askbbtsk/pcl-lite/releases)
@@ -107,6 +111,22 @@ PCL Lite 始终建议使用最新版本的操作系统以获得最佳体验。
 
 感谢这个人
 后记:龙猫你个傻逼能不能不要用主题圈钱啊
+
+
+## 遛狗区
+<img width="310" height="148" alt="b4bccd42-7ae9-4e36-ba76-33a3c93eff6b" src="https://github.com/user-attachments/assets/7c488eee-59e9-44db-ac34-24b9517a85f9" />
+<img width="568" height="493" alt="image" src="https://github.com/user-attachments/assets/2b8f0450-159f-4ed4-ac45-0db5e393a257" />
+<img width="1119" height="396" alt="image" src="https://github.com/user-attachments/assets/7e1e1995-95b8-4e67-b768-2de20cbb8445" />
+<img width="510" height="200" alt="image" src="https://github.com/user-attachments/assets/85e5450f-9c24-4a6e-913d-0cab53fb36ed" />
+<img width="412" height="468" alt="image" src="https://github.com/user-attachments/assets/f17ad58c-6d0d-4ac0-a1fe-f3b75bfb2632" />
+<img width="349" height="126" alt="image" src="https://github.com/user-attachments/assets/5007fd73-cb3b-402e-8792-d6c06cdc26bb" />
+<img width="717" height="128" alt="image" src="https://github.com/user-attachments/assets/b61d1d37-c1e1-4f9d-9abe-190ea2bc49bf" />
+<img width="362" height="357" alt="image" src="https://github.com/user-attachments/assets/def76e03-e62a-4bf3-9a85-0415defa0ee0" />
+<img width="412" height="468" alt="image" src="https://github.com/user-attachments/assets/4efdfe1c-dbe7-4c8b-8120-3a16cddc3a5e" />
+<img width="616" height="413" alt="image" src="https://github.com/user-attachments/assets/617a72ae-9575-4b8e-b33f-23d82a20ac5e" />
+
+<img width="563" height="128" alt="image" src="https://github.com/user-attachments/assets/54813ecd-6620-4f06-b494-52d0f325fdcd" />我不知道阿q姓赵!
+
 
 ## Star History
 

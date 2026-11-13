@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -32,6 +33,7 @@ internal static class Program
             LoadBuiltInResources(application);
             CheckLearningExampleExport();
             CheckThemeSettingsPlacement();
+            CheckLiquidGlassSettings();
             var source = System.IO.Path.GetFullPath("examples/themes/SoftSlate");
             var service = new ThemePackageService(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pcl-theme-smoke"),
                 System.IO.Path.GetTempPath());
@@ -67,6 +69,7 @@ internal static class Program
                 CheckThemeDropDownRecovery(registry, form, layer);
                 CheckProtectedThemeSelector(registry, form);
                 CheckSelectionAndListRoundTrips(registry, form);
+            CheckMinecraftRootSelectorUsesGlassCapsule();
                 CheckProgrammaticPresentationState(registry, form);
                 CheckRootResourceRestoration(registry, main, form, runtime, layer);
             }
@@ -84,6 +87,30 @@ internal static class Program
             Console.Error.WriteLine("::error::Theme smoke failed: " + error);
             return 1;
         }
+    }
+
+    private static void CheckMinecraftRootSelectorUsesGlassCapsule()
+    {
+        ModAnimation.AniControlEnabled++;
+        try
+        {
+            var page = new PageSelectLeft();
+            var item = new MyListItem
+            {
+                Type = MyListItem.CheckType.RadioBox,
+                IsScaleAnimationEnabled = false,
+                Height = 40,
+                Title = "Minecraft root"
+            };
+            var panList = (Panel)typeof(PageSelectLeft).GetField("PanList",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(page)!;
+            panList.Children.Add(item);
+            var method = typeof(MyListItem).GetMethod("IsNavigationItem", PrivateInstance)!;
+            if (!(bool)method.Invoke(item, null)!)
+                throw new InvalidDataException("Minecraft-root radio choices must use the glass navigation capsule.");
+        }
+        finally { ModAnimation.AniControlEnabled--; }
+        Console.WriteLine("Minecraft-root selector is included in rounded glass navigation.");
     }
 
     private static void LoadBuiltInResources(System.Windows.Application application)
@@ -130,6 +157,107 @@ internal static class Program
             throw new InvalidDataException("The actual settings XAML must name the liquid glass anchor.");
         Console.WriteLine("Theme package settings insert immediately below the actual liquid glass card.");
     }
+
+    private static void CheckLiquidGlassSettings()
+    {
+        var config = Config.Preference.TahoeGlass;
+        config.PerformancePreset = 3;
+        config.MaximumFrameRate = 120;
+        config.SamplingFrameRate = -1;
+        config.BlurRadius = config.Dispersion = config.Highlight = config.Motion = -1;
+        config.Diffuse = config.EdgeSharpness = -1;
+        static PageSetupUI CreatePage()
+        {
+            // Match the production page-construction guard: unrelated XAML defaults
+            // must not invoke main-window preference observers during InitializeComponent.
+            ModAnimation.AniControlEnabled++;
+            try { return new PageSetupUI(); }
+            finally { ModAnimation.AniControlEnabled--; }
+        }
+        var page = CreatePage(); // Never loaded into a Window; no capture or desktop access.
+        var refresh = typeof(PageSetupUI).GetMethod("RefreshLiquidGlassSettings", PrivateInstance)!;
+        var custom = typeof(PageSetupUI).GetMethod("UseCustomGlassSettings", PrivateInstance)!;
+        refresh.Invoke(page, null);
+        custom.Invoke(page, null);
+        if (config.PerformancePreset != PCL.Core.UI.LiquidGlassPerformance.CustomPreset ||
+            config.BlurRadius != 3 || config.Dispersion != 30 || config.Highlight != 80 ||
+            config.Motion != 1 || config.SamplingFrameRate != 120)
+            throw new InvalidDataException("Custom glass settings lost inherited Ultra values.");
+        var combo = (MyComboBox)page.FindName("ComboLiquidGlassPreset");
+        if (combo.Items.Count != 5 || combo.SelectedIndex != 4 || combo.MinHeight < 38)
+            throw new InvalidDataException("Glass recommendations must include a full-height Custom option.");
+        var slider = (MySlider)page.FindName("SliderLiquidGlassRefraction");
+        slider.Value = 0;
+        typeof(PageSetupUI).GetMethod("LiquidGlassRefraction_Changed", PrivateInstance)!.Invoke(page, [slider, true]);
+        if (config.RefractionPercent != 0 || config.BlurRadius != 3)
+            throw new InvalidDataException("Zero refraction must be accepted without resetting other tuning.");
+        slider.Value = 137;
+        typeof(PageSetupUI).GetMethod("LiquidGlassRefraction_Changed", PrivateInstance)!.Invoke(page, [slider, true]);
+        if (config.RefractionPercent != 137 || Math.Abs(LiquidGlassCore.RefractionStrength - .0685) > 1e-9)
+            throw new InvalidDataException("The refraction control must support exact 1% steps.");
+        slider.Value = 200;
+        typeof(PageSetupUI).GetMethod("LiquidGlassRefraction_Changed", PrivateInstance)!.Invoke(page, [slider, true]);
+        if (config.RefractionPercent != 200)
+            throw new InvalidDataException("The refraction control must reach 200%.");
+        var card = (MySlider)page.FindName("SliderLiquidGlassCard");
+        card.Value = 37;
+        typeof(PageSetupUI).GetMethod("LiquidGlassOptics_Changed", PrivateInstance)!.Invoke(page, [card, true]);
+        if (config.CardOpacity != 37)
+            throw new InvalidDataException("Card tint must be independently adjustable.");
+        var quality = (MySlider)page.FindName("SliderLiquidGlassQuality");
+        quality.Value = 25;
+        typeof(PageSetupUI).GetMethod("LiquidGlassOptics_Changed", PrivateInstance)!.Invoke(page, [quality, true]);
+        if (config.SamplingQuality != 50 || config.CardOpacity != 37)
+            throw new InvalidDataException("Sampling quality must not overwrite card tint.");
+        foreach (var (name, tag, setting) in new[]
+                 { ("SliderLiquidGlassBrightness", "Brightness", 19), ("SliderLiquidGlassCardBrightness", "CardBrightness", 83) })
+        {
+            var control = (MySlider)page.FindName(name);
+            control.Value = setting;
+            typeof(PageSetupUI).GetMethod("LiquidGlassOptics_Changed", PrivateInstance)!.Invoke(page, [control, true]);
+            if ((tag == "Brightness" ? config.Brightness : config.CardBrightness) != setting - 50)
+                throw new InvalidDataException("Signed brightness control mapping failed: " + name);
+        }
+        if (config.Brightness != -31 || config.CardBrightness != 33)
+            throw new InvalidDataException("Glass and card brightness must be independent.");
+        var edgeQuality = (MyComboBox)page.FindName("ComboLiquidGlassEdgeAA");
+        if (edgeQuality.SelectedIndex != 1 || !CheckBoxValue(page, "CheckLiquidGlassEdgeAA"))
+            throw new InvalidDataException("Glass edge antialiasing must default to enabled at standard quality.");
+        edgeQuality.SelectedIndex = 2;
+        typeof(PageSetupUI).GetMethod("LiquidGlassEdgeAAQuality_Changed", PrivateInstance)!
+            .Invoke(page, [edgeQuality, new SelectionChangedEventArgs(Selector.SelectionChangedEvent, Array.Empty<object>(), Array.Empty<object>())]);
+        var edgeEnabled = page.FindName("CheckLiquidGlassEdgeAA");
+        typeof(PageSetupUI).GetMethod("LiquidGlassEdgeAA_Changed", PrivateInstance)!.Invoke(page, [edgeEnabled, true]);
+        if (!config.EdgeAntiAliasing || config.EdgeAntiAliasingQuality != 2)
+            throw new InvalidDataException("Glass edge antialiasing quality must be independently persisted.");
+        var sampling = (MySlider)page.FindName("SliderLiquidGlassSampling");
+        sampling.Value = 0;
+        typeof(PageSetupUI).GetMethod("LiquidGlassSampling_Changed", PrivateInstance)!.Invoke(page, [sampling, true]);
+        if (config.SamplingFrameRate != 30 || config.MaximumFrameRate != 120)
+            throw new InvalidDataException("Desktop sampling must be independent of animation frame rate.");
+        var reopened = CreatePage();
+        refresh.Invoke(reopened, null);
+        if (((MyComboBox)reopened.FindName("ComboLiquidGlassPreset")).SelectedIndex != 4 ||
+            ((MySlider)reopened.FindName("SliderLiquidGlassSampling")).Value != 0)
+            throw new InvalidDataException("Reopening settings must retain custom tuning.");
+        var oldTheme = Config.Preference.Theme.ThemeSelected;
+        var oldGlass = config.IsEnabled;
+        var oldDesktop = config.UseDesktopBackdrop;
+        var oldConsent = config.PerformanceConsent;
+        var oldDesktopConsent = config.DesktopCaptureConsent;
+        typeof(PageSetupUI).GetMethod("ApplyGlassRecommendation", PrivateInstance)!.Invoke(page, [1]);
+        if (config.RefractionPercent != 100 || config.FrostRadius != 8 || config.BlurRadius != 1 ||
+            config.CardOpacity != -1 || config.SamplingQuality != 100 || config.Brightness != 0 || config.CardBrightness != 0 ||
+            config.MaximumFrameRate != 60 || config.SamplingFrameRate != 60 ||
+            config.IsEnabled != oldGlass || config.UseDesktopBackdrop != oldDesktop ||
+            config.PerformanceConsent != oldConsent || config.DesktopCaptureConsent != oldDesktopConsent ||
+            Config.Preference.Theme.ThemeSelected != oldTheme)
+            throw new InvalidDataException("Restoring glass parameters must preserve switches, consent and theme.");
+        Console.WriteLine("Glass settings: Custom option, inherited-value preservation, 0–200% refraction and independent sampling passed.");
+    }
+
+    private static bool CheckBoxValue(PageSetupUI page, string name) =>
+        ((MyCheckBox)page.FindName(name)).Checked == true;
 
     private static void CheckLearningExampleExport()
     {

@@ -1,4 +1,6 @@
 using System;
+using PCL.Core.App.Essentials;
+using PCL.Core.UI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -285,8 +287,22 @@ internal sealed class TahoeDesktopCapture : IDisposable
             {
                 TahoeCaptureRegion region = frame.Region;
                 if (!IsCurrent(session) || region.Version != _version || _bitmap == null) return;
-                int stride = checked(region.Width * 4);
-                _bitmap.WritePixels(new Int32Rect(region.DestinationX, region.DestinationY + frame.DirtyY, region.Width, frame.DirtyHeight),
+                int width = frame.SampleWidth > 0 ? frame.SampleWidth : region.Width;
+                int height = frame.SampleHeight > 0 ? frame.SampleHeight : region.Height;
+                bool fullViewport = region.DestinationX == 0 && region.DestinationY == 0 &&
+                    region.Width == (int)_bounds.Width && region.Height == (int)_bounds.Height;
+                if ((width != region.Width || height != region.Height) && !fullViewport)
+                    throw new InvalidOperationException("Reduced samples must cover the whole viewport.");
+                int bitmapWidth = fullViewport ? width : checked((int)_bounds.Width);
+                int bitmapHeight = fullViewport ? height : checked((int)_bounds.Height);
+                if (_bitmap.PixelWidth != bitmapWidth || _bitmap.PixelHeight != bitmapHeight)
+                {
+                    _bitmap = NewBitmap(bitmapWidth, bitmapHeight);
+                    // A resized payload must supply the complete image, not stale dirty rows.
+                    frame = frame with { DirtyY = 0, DirtyHeight = height };
+                }
+                int stride = checked(width * 4);
+                _bitmap.WritePixels(new Int32Rect(region.DestinationX, region.DestinationY + frame.DirtyY, width, frame.DirtyHeight),
                     frame.Pixels, stride, checked(frame.DirtyY * stride));
                 _target.Source = _bitmap;
                 UploadedBytes += (long)stride * frame.DirtyHeight;
@@ -304,7 +320,7 @@ internal sealed class TahoeDesktopCapture : IDisposable
                     SetState(TahoeCaptureState.Live, firstFrame);
                 else if (firstFrame) StateChanged?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception error) when (error is not OutOfMemoryException) { Failed(session, error); }
+            catch (Exception error) { Failed(session, error); }
             finally { completed(); }
         });
         operation.Aborted += (_, _) => completed();
@@ -317,6 +333,15 @@ internal sealed class TahoeDesktopCapture : IDisposable
         {
             // Session identity prevents late errors from stopping its replacement.
             if (!IsCurrent(session)) return;
+            if (LiquidGlassFailureRecovery.IsGraphicsResourceFailure(error))
+            {
+                if (ApplicationService.RecoverUnhandledException?.Invoke(error) == true) return;
+                // Do not retry allocations forever when the graphics subsystem
+                // is exhausted. If recovery was unavailable, let the UI boundary
+                // perform its existing fatal handling.
+                Stop();
+                throw error;
+            }
             _sessions.Remove(session.Monitor);
             Release(session.Capture);
             ++_version;

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using PCL.Core.App;
 
 namespace PCL;
 
@@ -52,18 +53,17 @@ public partial class MyCard
             }
 
             ModAnimation.AniStop("MyCard Mouse " + uuid);
-            // Reading groups belong to the content plane. Reserve optical glass
-            // for floating navigation and actions rather than nesting lenses.
+            var palette = LiquidGlassCore.CurrentPalette;
+            // Translucent theme-harmonized card plane lets desktop and wallpaper glow softly breathe through
+            // while keeping typography crisp and preserving true refractive lenses for floating chrome.
             MainChrome.SetCurrentValue(MyDropShadow.CornerRadiusProperty, new CornerRadius(16));
             mainBorder.SetCurrentValue(Border.CornerRadiusProperty, new CornerRadius(16));
             mainBorder.SetCurrentValue(Border.BorderThicknessProperty, new Thickness(TahoeIsFlat ? 0 : .5));
-            mainBorder.SetCurrentValue(Border.BorderBrushProperty, new SolidColorBrush(SystemParameters.HighContrast
-                ? SystemColors.WindowTextColor : ThemeManager.IsDarkMode
-                ? Color.FromArgb(22, 255, 255, 255)
-                : Color.FromArgb(16, 0, 0, 0)));
+            mainBorder.SetCurrentValue(Border.BorderBrushProperty, new SolidColorBrush(
+                SystemParameters.HighContrast ? SystemColors.WindowTextColor : palette.CardBorder));
             mainBorder.Background = TahoeContentBrush();
-            MainTextBlock.Foreground = new SolidColorBrush(SystemParameters.HighContrast ? SystemColors.WindowTextColor : ThemeManager.IsDarkMode
-                ? Color.FromRgb(242, 243, 245) : Color.FromRgb(37, 40, 48));
+            MainTextBlock.Foreground = new SolidColorBrush(
+                SystemParameters.HighContrast ? SystemColors.WindowTextColor : palette.Text);
             MainTextBlock.Margin = new Thickness(20, 13, 20, 0);
             MainTextBlock.FontWeight = FontWeights.SemiBold;
             MainChrome.SetCurrentValue(MarginProperty, new Thickness(-6, -5, -6, -7));
@@ -90,5 +90,8 @@ public partial class MyCard
 
     private SolidColorBrush TahoeContentBrush() => TahoeIsFlat ? Brushes.Transparent
         : SystemParameters.HighContrast ? SystemColors.WindowBrush
-        : new SolidColorBrush(ThemeManager.IsDarkMode ? Color.FromRgb(42, 43, 47) : Color.FromRgb(248, 248, 250));
+        : new SolidColorBrush(PCL.Core.UI.LiquidGlassMaterial.AdjustBrightness(
+            PCL.Core.UI.LiquidGlassMaterial.CardTint(
+                LiquidGlassCore.CurrentPalette.CardSurface, Config.Preference.TahoeGlass.CardOpacity),
+            Config.Preference.TahoeGlass.CardBrightness));
 }
