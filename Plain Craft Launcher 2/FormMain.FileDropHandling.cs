@@ -601,6 +601,11 @@ public partial class FormMain
         ///         </para>
         /// </summary>
         Lunar = 13,
+
+        /// <summary>
+        ///     IPv6 直连联机。导航栏里排在「Lunar」右侧。
+        /// </summary>
+        Link = 15,
     }
 
 
@@ -660,6 +665,12 @@ public partial class FormMain
         ///     百宝箱：导入 PCL2 / PCLCE 的设置。
         /// </summary>
         ToolsImport = 4,
+
+        /// <summary>
+        ///     IPv6 离线邀请码直连联机（房主 / 房客）。
+        /// </summary>
+        LinkHost = 30,
+        LinkGuest = 31,
 
         BedrockDownload = 0,
         BedrockLaunch = 1,

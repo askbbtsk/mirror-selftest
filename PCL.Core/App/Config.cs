@@ -252,7 +252,7 @@ public static partial class Config
         [ConfigItem<bool>("UiLogoLeft", false, ConfigSource.Local)] public partial bool TopBarLeftAlign { get; set; }
 
         /// <summary>标题栏空间不足时优先折叠的主导航页码，以逗号分隔。</summary>
-        [ConfigItem<string>("UiTopBarCollapsedTabs", "3,14", ConfigSource.Local)] public partial string TopBarCollapsedTabs { get; set; }
+        [ConfigItem<string>("UiTopBarCollapsedTabs", "3,14,15", ConfigSource.Local)] public partial string TopBarCollapsedTabs { get; set; }
 
         /// <summary>
         /// 全局字体。
@@ -561,8 +561,6 @@ public static partial class Config
             [ConfigItem<int>("UiLiquidGlassCardOpacity", -1, ConfigSource.Local)] public partial int CardOpacity { get; set; }
             [ConfigItem<int>("UiLiquidGlassBrightness", 0, ConfigSource.Local)] public partial int Brightness { get; set; }
             [ConfigItem<int>("UiLiquidGlassCardBrightness", 0, ConfigSource.Local)] public partial int CardBrightness { get; set; }
-            [ConfigItem<bool>("UiLiquidGlassEdgeAA", true, ConfigSource.Local)] public partial bool EdgeAntiAliasing { get; set; }
-            [ConfigItem<int>("UiLiquidGlassEdgeAAQuality", 1, ConfigSource.Local)] public partial int EdgeAntiAliasingQuality { get; set; }
             [ConfigItem<int>("UiLiquidGlassMotion", -1, ConfigSource.Local)] public partial int Motion { get; set; }
             // Fresh opt-in is required even for settings left by earlier experimental builds.
             [ConfigItem<bool>("UiLiquidGlassConsent", false, ConfigSource.Local)] public partial bool PerformanceConsent { get; set; }
