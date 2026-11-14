@@ -17,14 +17,19 @@ namespace PCL;
 
 public partial class PageToolsDirectLink
 {
+    private static readonly TimeSpan LanWorldExpireTimeout = TimeSpan.FromSeconds(4.5);
+
     private IReadOnlyList<Ipv6Candidate> _ipv6Candidates = [];
     private Ipv6HostSession? _hostSession;
     private Ipv6GuestSession? _guestSession;
     private CancellationTokenSource? _lanListenCts;
-    private CancellationTokenSource? _guestAckRevealCts;
     private DispatcherTimer? _hostPunchUiTimer;
+    private DispatcherTimer? _lanExpireTimer;
     private FormMain.PageSubType _currentMode = FormMain.PageSubType.LinkHost;
-    private bool _hasAutoFilledLanPort;
+    private LanWorldInfo? _lastLanWorld;
+    private ushort _lastAutoFilledLanPort;
+    private bool _hasUserEditedHostPort;
+    private bool _isProgrammaticHostPortUpdate;
 
     public PageToolsDirectLink()
     {
@@ -47,6 +52,8 @@ public partial class PageToolsDirectLink
     {
         SetMode(_currentMode);
         RefreshIpv6Status();
+        if (_hostSession is null)
+            ClearTransientHostPortState();
         StartLanListener();
         UpdateHostPeersUi();
         UpdateGuestUi();
@@ -58,14 +65,17 @@ public partial class PageToolsDirectLink
         _lanListenCts?.Cancel();
         _lanListenCts?.Dispose();
         _lanListenCts = null;
+        StopLanExpireTimer();
         StopHostPunchTimer();
+        if (_hostSession is null)
+            ClearTransientHostPortState();
     }
 
     public void RefreshIpv6ByUser()
     {
         RefreshIpv6Status();
         HintService.Hint(
-            _ipv6Candidates.Count > 0 ? "公网 IPv6 检测通过，可以直接开房或加房。" : "还是没检测到公网 IPv6，检查下路由器或试试手机热点。",
+            _ipv6Candidates.Count > 0 ? "当前网络可以连接，可以直接开房或加房。" : "还是没检测到公网 IPv6，检查下路由器或试试手机热点。",
             _ipv6Candidates.Count > 0 ? HintType.Success : HintType.Error);
     }
 
@@ -109,18 +119,17 @@ public partial class PageToolsDirectLink
                 ModMain.frmLinkLeft.UpdateSidebarStatus(
                     false,
                     Lang.Text("Link.Sidebar.GuestConnecting"),
-                    $"[{_guestSession.HostEndpoint.Address}]:{_guestSession.HostEndpoint.Port}");
+                    "房主 #1 · 正在建立直连通道");
             }
             return;
         }
 
         if (_ipv6Candidates.Count > 0)
         {
-            var primary = _ipv6Candidates[0];
             ModMain.frmLinkLeft.UpdateSidebarStatus(
                 true,
                 Lang.Text("Link.Sidebar.Ipv6Ready"),
-                $"{primary.InterfaceName}\n{primary.Address}");
+                Lang.Text("Link.Sidebar.Ipv6ReadyDetail"));
         }
         else
         {
@@ -133,6 +142,7 @@ public partial class PageToolsDirectLink
 
     private void StartLanListener()
     {
+        EnsureLanExpireTimerRunning();
         if (_lanListenCts is not null)
             return;
 
@@ -142,19 +152,77 @@ public partial class PageToolsDirectLink
         {
             Dispatcher.BeginInvoke(() =>
             {
+                _lastLanWorld = info;
                 LabLanDetected.Text = Lang.Text("Link.Host.LanCaptured", info.Motd, info.Port);
-                if (!_hasAutoFilledLanPort || _hostSession is not null)
-                {
-                    _hasAutoFilledLanPort = true;
-                    TextHostPort.Text = info.Port.ToString();
-                }
                 if (_hostSession is not null)
                 {
+                    _lastAutoFilledLanPort = info.Port;
+                    SetHostPortProgrammatic(info.Port.ToString());
                     _hostSession.McPort = info.Port;
                     PushSidebarStatus();
                 }
+                else if (!_hasUserEditedHostPort && _lastAutoFilledLanPort != info.Port)
+                {
+                    _lastAutoFilledLanPort = info.Port;
+                    SetHostPortProgrammatic(info.Port.ToString());
+                }
             });
         }, ct), ct);
+    }
+
+    private void EnsureLanExpireTimerRunning()
+    {
+        if (_lanExpireTimer is null)
+        {
+            _lanExpireTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher)
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _lanExpireTimer.Tick += (_, _) => ExpireStaleLanWorldIfNeeded();
+        }
+        if (!_lanExpireTimer.IsEnabled)
+            _lanExpireTimer.Start();
+    }
+
+    private void StopLanExpireTimer()
+    {
+        _lanExpireTimer?.Stop();
+    }
+
+    private void ExpireStaleLanWorldIfNeeded()
+    {
+        if (_lastLanWorld is null)
+            return;
+        if (DateTimeOffset.UtcNow - _lastLanWorld.LastSeenUtc <= LanWorldExpireTimeout)
+            return;
+
+        _lastLanWorld = null;
+        _lastAutoFilledLanPort = 0;
+        LabLanDetected.Text = Lang.Text("Link.Host.LanWaiting");
+        if (_hostSession is null && !_hasUserEditedHostPort)
+            SetHostPortProgrammatic(string.Empty);
+    }
+
+    private void ClearTransientHostPortState()
+    {
+        _lastLanWorld = null;
+        _lastAutoFilledLanPort = 0;
+        _hasUserEditedHostPort = false;
+        LabLanDetected.Text = Lang.Text("Link.Host.LanWaiting");
+        SetHostPortProgrammatic(string.Empty);
+    }
+
+    private void SetHostPortProgrammatic(string value)
+    {
+        _isProgrammaticHostPortUpdate = true;
+        try
+        {
+            TextHostPort.Text = value;
+        }
+        finally
+        {
+            _isProgrammaticHostPortUpdate = false;
+        }
     }
 
     private void BtnRetryIpv6_Click(object sender, MouseButtonEventArgs e)
@@ -164,6 +232,9 @@ public partial class PageToolsDirectLink
 
     private void TextHostPort_TextChanged(object sender, TextChangedEventArgs e)
     {
+        if (!_isProgrammaticHostPortUpdate)
+            _hasUserEditedHostPort = !string.IsNullOrWhiteSpace(TextHostPort.Text);
+
         if (_hostSession is not null && ushort.TryParse(TextHostPort.Text.Trim(), out var port) && port > 0)
         {
             _hostSession.McPort = port;
@@ -254,6 +325,7 @@ public partial class PageToolsDirectLink
         LabHostPeers.Text = Lang.Text("Link.Host.NoPeers");
         BtnHostToggle.Text = Lang.Text("Link.Host.StartBtn");
         BtnHostToggle.ColorType = MyButton.ColorState.Highlight;
+        ClearTransientHostPortState();
         PushSidebarStatus();
         HintService.Hint("已关闭直连房间。");
     }
@@ -277,15 +349,16 @@ public partial class PageToolsDirectLink
         var hasPunching = false;
         var lines = peers.Select(p =>
         {
+            var peerLabel = p.VirtualId > 0 ? $"好友 #{p.VirtualId}" : "好友";
             if (p.State == DirectPeerState.Connected)
-                return $"• [{p.Endpoint.Address}]:{p.Endpoint.Port}  已连上 · {p.RttMs} ms{(p.IsDirectNoAck ? "（直连）" : "")}";
+                return $"• {peerLabel}  已连上 · {p.RttMs} ms{(p.IsDirectNoAck ? "（直连）" : "")}";
 
             hasPunching = true;
             var elapsedSec = p.AddedUtc == default ? 0 : Math.Max(0, (int)(now - p.AddedUtc).TotalSeconds);
             var status = elapsedSec >= 8
                 ? $"仍在打洞（已尝试 {elapsedSec}s，请检查双方 Windows 防火墙及路由器 IPv6 入站放行，并在日志查看报错详情）"
                 : $"正在打洞，已尝试 {elapsedSec}s…";
-            return $"• [{p.Endpoint.Address}]:{p.Endpoint.Port}  {status}";
+            return $"• {peerLabel}  {status}";
         });
         LabHostPeers.Text = string.Join(Environment.NewLine, lines);
 
@@ -342,6 +415,7 @@ public partial class PageToolsDirectLink
         if (ok)
         {
             TextHostAckInput.Text = string.Empty;
+            TextHostAckInput.Focus();
             UpdateHostPeersUi();
             PushSidebarStatus();
             HintService.Hint(msg, HintType.Success);
@@ -367,7 +441,7 @@ public partial class PageToolsDirectLink
             return;
         }
 
-        // 若输入框为空或无效，尝试直接从剪贴板读 PCL6- 邀请码
+        // 若输入框为空或无效，尝试直接从剪贴板读 BSK- 邀请码
         var input = TextGuestInviteInput.Text.Trim();
         if ((string.IsNullOrEmpty(input) || !input.StartsWith(InviteCodeCodec.HostPrefix, StringComparison.OrdinalIgnoreCase)) &&
             TryGetClipboardText(out var clip) &&
@@ -384,7 +458,7 @@ public partial class PageToolsDirectLink
         }
         if (invite.Kind != InviteKind.HostInvite)
         {
-            HintService.Hint("这个看起来是回执码，这里要填房主发来的 PCL6- 邀请码。", HintType.Error);
+            HintService.Hint("这个看起来是回执码，这里要填房主发来的 BSK- 邀请码。", HintType.Error);
             return;
         }
 
@@ -400,37 +474,16 @@ public partial class PageToolsDirectLink
             TextGuestAckCode.Text = _guestSession.AckCode;
             TextLocalAddr.Text = $"127.0.0.1:{_guestSession.LocalProxyPort}";
             CardGuestProgress.Visibility = Visibility.Visible;
-            PanGuestAck.Visibility = Visibility.Collapsed;
+            PanGuestAck.Visibility = Visibility.Visible;
             PanGuestConnected.Visibility = Visibility.Collapsed;
-            LabGuestStatus.Text = Lang.Text("Link.Guest.Connecting");
+            LabGuestStatus.Text = Lang.Text("Link.Guest.NeedAckStatus");
 
             BtnGuestToggle.Text = Lang.Text("Link.Guest.DisconnectBtn");
             BtnGuestToggle.ColorType = MyButton.ColorState.Red;
             PushSidebarStatus();
 
-            _guestAckRevealCts?.Cancel();
-            _guestAckRevealCts = new CancellationTokenSource();
-            var revealCt = _guestAckRevealCts.Token;
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await Task.Delay(1200, revealCt);
-                    await Dispatcher.BeginInvoke(() =>
-                    {
-                        if (_guestSession is { IsConnected: false })
-                        {
-                            PanGuestAck.Visibility = Visibility.Visible;
-                            LabGuestStatus.Text = Lang.Text("Link.Guest.NeedAckStatus");
-                            TrySetClipboard(_guestSession.AckCode);
-                            HintService.Hint("未直接连通，已自动复制回执码！快发给房主点放行。", HintType.Success);
-                        }
-                    });
-                }
-                catch (OperationCanceledException)
-                {
-                }
-            }, revealCt);
+            TrySetClipboard(_guestSession.AckCode);
+            HintService.Hint("已复制回执码，请通过可信聊天渠道发给房主放行。每位好友都需要单独放行。", HintType.Success);
         }
         catch (Exception ex)
         {
@@ -440,10 +493,6 @@ public partial class PageToolsDirectLink
 
     private async Task StopGuestAsync()
     {
-        _guestAckRevealCts?.Cancel();
-        _guestAckRevealCts?.Dispose();
-        _guestAckRevealCts = null;
-
         if (_guestSession is null)
             return;
 
@@ -467,7 +516,6 @@ public partial class PageToolsDirectLink
 
         if (_guestSession.IsConnected)
         {
-            _guestAckRevealCts?.Cancel();
             PanGuestAck.Visibility = Visibility.Collapsed;
             PanGuestConnected.Visibility = Visibility.Visible;
 

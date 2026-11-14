@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Threading;
@@ -22,13 +23,16 @@ public sealed record DirectPeerSnapshot(
     DirectPeerState State,
     int RttMs,
     bool IsDirectNoAck,
-    DateTimeOffset AddedUtc = default);
+    DateTimeOffset AddedUtc = default,
+    int VirtualId = 0);
 
 public sealed class Ipv6HostSession : IAsyncDisposable
 {
     private sealed class PeerEntry
     {
+        public required int VirtualId { get; init; }
         public required UdpReliablePeer Peer { get; init; }
+        public required byte[] PeerId { get; init; }
         public required bool DirectNoAck { get; init; }
         public required DateTimeOffset AddedUtc { get; init; }
         public int ConnectedLogged;
@@ -36,10 +40,12 @@ public sealed class Ipv6HostSession : IAsyncDisposable
 
     private readonly Socket _udp;
     private readonly uint _token;
+    private readonly TunnelSecret _secret = TunnelSecret.Create();
     private readonly ushort _udpPort;
     private readonly IPAddress _publicAddress;
     private readonly bool _requireOnlineAuth;
     private readonly ConcurrentDictionary<IPEndPoint, PeerEntry> _peers = new();
+    private readonly object _peerCreateLock = new();
     private readonly ConcurrentDictionary<int, byte> _loggedErrors = new();
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _recvTask;
@@ -47,6 +53,7 @@ public sealed class Ipv6HostSession : IAsyncDisposable
 
     private int _mcPort;
     private int _mcConnectWarned;
+    private int _nextPeerId;
 
     public string InviteCode { get; }
     public IPAddress PublicAddress => _publicAddress;
@@ -79,11 +86,11 @@ public sealed class Ipv6HostSession : IAsyncDisposable
             InviteKind.HostInvite,
             publicAddress,
             udpPort,
-            token));
+            token, _secret));
 
         var actualLocal = _udp.LocalEndPoint as IPEndPoint;
         LogWrapper.Info("Link",
-            $"[Host] 房间已启动：邀请地址 [{publicAddress}]:{udpPort}，实际绑定 {actualLocal}，目标 MC 端口 {mcPort}，正版验证={(requireOnlineAuth ? "开启" : "关闭")}");
+            $"[Host] 房间已启动：本机 IPv6 已脱敏，UDP 监听端口 {actualLocal?.Port ?? udpPort}，目标 MC 端口 {mcPort}，正版验证={(requireOnlineAuth ? "开启" : "关闭")}");
 
         _recvTask = Task.Run(() => ReceiveLoopAsync(_cts.Token));
         _probeTask = Task.Run(() => ProbeLoopAsync(_cts.Token));
@@ -110,45 +117,79 @@ public sealed class Ipv6HostSession : IAsyncDisposable
         }
         if (payload.Kind != InviteKind.GuestAck)
         {
-            message = "这不是好友发来的回执码（应以 ACK6- 开头）。";
+            message = "这不是好友发来的回执码（应以 ACK- 开头）。";
             return false;
         }
-        if (payload.Token != _token)
+        if (!InviteCodeCodec.VerifyGuestAck(payload, _token, _secret))
         {
-            message = "回执码与当前房间不匹配（可能是旧房间或别人房间的回执码）。";
+            message = "回执码认证失败或与当前房间不匹配，请重新生成并复制回执码。";
             return false;
         }
 
         var ep = TunnelBridgeHelper.NormalizeEndpoint(new IPEndPoint(payload.Address, payload.Port));
-        var peer = GetOrCreatePeer(ep, directNoAck: false);
-        _ = SendPunchBurstAsync(peer, _cts.Token);
-        LogWrapper.Info("Link", $"[Host] 已添加好友回执地址 [{ep.Address}]:{ep.Port}，正在连发打洞探测包");
+        PeerEntry entry;
+        bool alreadyAccepted;
+        lock (_peerCreateLock)
+        {
+            alreadyAccepted = _peers.TryGetValue(ep, out var known);
+            if (known is not null && !known.PeerId.AsSpan().SequenceEqual(payload.PeerId))
+            {
+                message = "该端口已绑定另一个好友会话，请好友重新加入并生成回执码。";
+                return false;
+            }
+            foreach (var peer in _peers)
+            {
+                if (!peer.Key.Equals(ep) && peer.Value.PeerId.AsSpan().SequenceEqual(payload.PeerId))
+                {
+                    message = "该好友会话已绑定其他端口，请好友重新加入并生成回执码。";
+                    return false;
+                }
+            }
+            entry = GetOrCreatePeerEntry(ep, directNoAck: false, payload.PeerId!);
+        }
+        _ = SendPunchBurstAsync(entry.Peer, _cts.Token);
+        LogWrapper.Info("Link", $"[Host] 已添加 好友 #{entry.VirtualId}，正在连发打洞探测包");
         StateChanged?.Invoke();
-        message = $"已添加好友 [{payload.Address}]:{payload.Port}，正在双向打洞…";
+        message = alreadyAccepted
+            ? $"好友 #{entry.VirtualId} 已放行，已保留原连接，可继续输入其他好友的回执码。"
+            : $"已添加 好友 #{entry.VirtualId}，正在双向打洞，可继续输入其他好友的回执码。";
         return true;
     }
 
     public IReadOnlyList<DirectPeerSnapshot> GetPeers()
     {
         return _peers.Select(kv => new DirectPeerSnapshot(
-            kv.Key,
-            kv.Value.Peer.IsReachable ? DirectPeerState.Connected : DirectPeerState.Punching,
-            kv.Value.Peer.RttMs,
-            kv.Value.DirectNoAck,
-            kv.Value.AddedUtc)).ToList();
+                kv.Key,
+                kv.Value.Peer.IsReachable ? DirectPeerState.Connected : DirectPeerState.Punching,
+                kv.Value.Peer.RttMs,
+                kv.Value.DirectNoAck,
+                kv.Value.AddedUtc,
+                kv.Value.VirtualId))
+            .OrderBy(p => p.VirtualId)
+            .ToList();
     }
 
-    private UdpReliablePeer GetOrCreatePeer(IPEndPoint ep, bool directNoAck)
+    private PeerEntry GetOrCreatePeerEntry(IPEndPoint ep, bool directNoAck, byte[] peerId)
     {
         ep = TunnelBridgeHelper.NormalizeEndpoint(ep);
-        var entry = _peers.GetOrAdd(ep, key =>
+        if (_peers.TryGetValue(ep, out var existing))
+            return existing;
+
+        lock (_peerCreateLock)
         {
+            if (_peers.TryGetValue(ep, out existing))
+                return existing;
+
+            var virtualId = Interlocked.Increment(ref _nextPeerId);
             var created = new PeerEntry
             {
+                VirtualId = virtualId,
                 Peer = new UdpReliablePeer(
                     _token,
-                    data => SendToAsync(key, data),
+                    _secret, peerId, isHost: true,
+                    data => SendToAsync(ep, virtualId, data),
                     localRequiresOnlineAuth: _requireOnlineAuth),
+                PeerId = peerId.ToArray(),
                 DirectNoAck = directNoAck,
                 AddedUtc = DateTimeOffset.UtcNow
             };
@@ -156,12 +197,12 @@ public sealed class Ipv6HostSession : IAsyncDisposable
             created.Peer.OnConnectedOrHeartbeat += rtt =>
             {
                 if (Interlocked.Exchange(ref created.ConnectedLogged, 1) == 0)
-                    LogWrapper.Info("Link", $"[Host] 与好友 [{key.Address}]:{key.Port} 打洞连通，延迟 {rtt} ms{(directNoAck ? "（免回执直连）" : "")}");
+                    LogWrapper.Info("Link", $"[Host] 与 好友 #{virtualId} 打洞连通，延迟 {rtt} ms{(directNoAck ? "（免回执直连）" : "")}");
                 StateChanged?.Invoke();
             };
+            _peers[ep] = created;
             return created;
-        });
-        return entry.Peer;
+        }
     }
 
     private async Task SendPunchBurstAsync(UdpReliablePeer peer, CancellationToken ct)
@@ -181,7 +222,7 @@ public sealed class Ipv6HostSession : IAsyncDisposable
         }
     }
 
-    private async ValueTask SendToAsync(IPEndPoint ep, ReadOnlyMemory<byte> data)
+    private async ValueTask SendToAsync(IPEndPoint ep, int virtualId, ReadOnlyMemory<byte> data)
     {
         try
         {
@@ -190,7 +231,7 @@ public sealed class Ipv6HostSession : IAsyncDisposable
         catch (SocketException ex)
         {
             if (_loggedErrors.TryAdd(ex.ErrorCode, 1))
-                LogWrapper.Warn("Link", $"[Host] UDP 发送到 [{ep.Address}]:{ep.Port} 出现 Socket 错误 ({ex.SocketErrorCode}/{ex.ErrorCode}): {ex.Message}");
+                LogWrapper.Warn("Link", $"[Host] UDP 发送到 好友 #{virtualId} 出现 Socket 错误 ({ex.SocketErrorCode}/{ex.ErrorCode}): {ex.Message}");
         }
         catch
         {
@@ -213,21 +254,10 @@ public sealed class Ipv6HostSession : IAsyncDisposable
 
                 var remoteEp = TunnelBridgeHelper.NormalizeEndpoint(rawRemoteEp);
                 var packet = buffer.AsSpan(0, res.ReceivedBytes);
-                if (packet.Length < 7)
+                // 只有房主输入 ACK 放行的端点才能进入隧道；邀请码本身不代表放行。
+                if (!_peers.TryGetValue(remoteEp, out var entry))
                     continue;
-                if (System.Buffers.Binary.BinaryPrimitives.ReadUInt16BigEndian(packet[0..2]) != UdpReliablePeer.PacketMagic)
-                    continue;
-                if (System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(packet[2..6]) != _token)
-                    continue;
-
-                // 如果房主本地无防火墙拦截，收到携带正确房间 Token 的房客包时直接接纳，免去复制回执码！
-                var isNew = !_peers.ContainsKey(remoteEp);
-                var peer = GetOrCreatePeer(remoteEp, directNoAck: true);
-                if (isNew)
-                    LogWrapper.Info("Link", $"[Host] 收到好友 [{remoteEp.Address}]:{remoteEp.Port} 的直连数据包");
-                peer.HandleIncomingPacket(packet);
-                if (isNew)
-                    StateChanged?.Invoke();
+                entry.Peer.HandleIncomingPacket(packet);
             }
             catch (OperationCanceledException)
             {
@@ -342,26 +372,23 @@ public sealed class Ipv6GuestSession : IAsyncDisposable
         _localProxy = localProxy;
         LocalProxyPort = (ushort)((IPEndPoint)localProxy.LocalEndpoint).Port;
 
-        AckCode = InviteCodeCodec.Encode(new InviteCodePayload(
-            InviteKind.GuestAck,
-            localPublicIpv6,
-            localUdpPort,
-            hostInvite.Token));
+        var peerId = RandomNumberGenerator.GetBytes(TunnelAuthentication.PeerIdSize);
+        AckCode = InviteCodeCodec.Encode(InviteCodeCodec.CreateGuestAck(hostInvite, localPublicIpv6, localUdpPort, peerId));
 
-        _peer = new UdpReliablePeer(hostInvite.Token, SendToHostAsync);
+        _peer = new UdpReliablePeer(hostInvite.Token, hostInvite.Secret!, peerId, isHost: false, SendToHostAsync);
         _peer.OnConnectedOrHeartbeat += rtt =>
         {
             if (Interlocked.Exchange(ref _connectedLogged, 1) == 0)
             {
                 LogWrapper.Info("Link",
-                    $"[Guest] 已与房主 [{_hostEndpoint.Address}]:{_hostEndpoint.Port} 连通，延迟 {rtt} ms，本地代理 127.0.0.1:{LocalProxyPort}，正版验证={(_peer.RemoteRequiresOnlineAuth ? "开启" : "关闭")}");
+                    $"[Guest] 已与 房主 #1 连通，延迟 {rtt} ms，本地代理 127.0.0.1:{LocalProxyPort}，正版验证={(_peer.RemoteRequiresOnlineAuth ? "开启" : "关闭")}");
             }
             StateChanged?.Invoke();
         };
 
         var actualLocal = _udp.LocalEndPoint as IPEndPoint;
         LogWrapper.Info("Link",
-            $"[Guest] 客户端已启动：本地绑定 {actualLocal}（回执地址 [{localPublicIpv6}]:{localUdpPort}），目标房主 [{_hostEndpoint.Address}]:{_hostEndpoint.Port}，本地 MC 代理 127.0.0.1:{LocalProxyPort}");
+            $"[Guest] 客户端已启动：本地端口 {actualLocal?.Port ?? localUdpPort}，目标 房主 #1，本地 MC 代理 127.0.0.1:{LocalProxyPort}");
 
         _recvTask = Task.Run(() => ReceiveLoopAsync(_cts.Token));
         _probeTask = Task.Run(() => ProbeLoopAsync(_cts.Token));
@@ -373,14 +400,13 @@ public sealed class Ipv6GuestSession : IAsyncDisposable
 
     public static Ipv6GuestSession Start(IPAddress localPublicIpv6, InviteCodePayload hostInvite)
     {
-        if (hostInvite.Kind != InviteKind.HostInvite)
-            throw new ArgumentException("必须使用房主生成的 PCL6- 邀请码。", nameof(hostInvite));
+        if (hostInvite.Kind != InviteKind.HostInvite || hostInvite.Secret is null)
+            throw new ArgumentException("必须使用房主生成的 BSK- 邀请码。", nameof(hostInvite));
 
         var udp = TunnelBridgeHelper.BindUdpSocket(localPublicIpv6, "[Guest]");
         var localUdpPort = (ushort)((IPEndPoint)udp.LocalEndPoint!).Port;
 
-        var localProxy = new TcpListener(IPAddress.Loopback, 0);
-        localProxy.Start();
+        var localProxy = TunnelBridgeHelper.BindRandomLoopbackTcpListener();
 
         return new Ipv6GuestSession(udp, localPublicIpv6, localUdpPort, hostInvite, localProxy);
     }
@@ -394,7 +420,7 @@ public sealed class Ipv6GuestSession : IAsyncDisposable
         catch (SocketException ex)
         {
             if (_loggedErrors.TryAdd(ex.ErrorCode, 1))
-                LogWrapper.Warn("Link", $"[Guest] UDP 发送到房主 [{_hostEndpoint.Address}]:{_hostEndpoint.Port} 出现 Socket 错误 ({ex.SocketErrorCode}/{ex.ErrorCode}): {ex.Message}");
+                LogWrapper.Warn("Link", $"[Guest] UDP 发送到 房主 #1 出现 Socket 错误 ({ex.SocketErrorCode}/{ex.ErrorCode}): {ex.Message}");
         }
         catch
         {
@@ -411,6 +437,9 @@ public sealed class Ipv6GuestSession : IAsyncDisposable
             try
             {
                 var res = await _udp.ReceiveFromAsync(buffer, SocketFlags.None, remoteAny, ct).ConfigureAwait(false);
+                if (res.RemoteEndPoint is not IPEndPoint endpoint ||
+                    !TunnelBridgeHelper.NormalizeEndpoint(endpoint).Equals(_hostEndpoint))
+                    continue;
                 _peer.HandleIncomingPacket(buffer.AsSpan(0, res.ReceivedBytes));
             }
             catch (OperationCanceledException)
@@ -523,29 +552,136 @@ internal static class TunnelBridgeHelper
         return ep;
     }
 
-    public static Socket BindUdpSocket(IPAddress preferredIpv6, string roleTag = "")
+    private const int RandomPortMin = 20000;
+    private const int RandomPortMaxExclusive = 60000;
+
+    private static HashSet<int> GetOccupiedPorts(bool includeTcp, bool includeUdp)
     {
-        var udp = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp)
-        {
-            DualMode = false
-        };
-        DisableUdpResetErrors(udp);
+        var occupied = new HashSet<int>();
         try
         {
-            udp.Bind(new IPEndPoint(preferredIpv6, 0));
-            return udp;
+            var props = IPGlobalProperties.GetIPGlobalProperties();
+            if (includeTcp)
+            {
+                foreach (var ep in props.GetActiveTcpListeners())
+                    occupied.Add(ep.Port);
+                foreach (var conn in props.GetActiveTcpConnections())
+                    occupied.Add(conn.LocalEndPoint.Port);
+            }
+            if (includeUdp)
+            {
+                foreach (var ep in props.GetActiveUdpListeners())
+                    occupied.Add(ep.Port);
+            }
+        }
+        catch
+        {
+            // 受限环境无法枚举系统端口时，依赖实际 Bind + ExclusiveAddressUse 检测占用
+        }
+        return occupied;
+    }
+
+    public static TcpListener BindRandomLoopbackTcpListener()
+    {
+        var occupied = GetOccupiedPorts(includeTcp: true, includeUdp: true);
+        for (var attempt = 0; attempt < 64; attempt++)
+        {
+            var port = RandomNumberGenerator.GetInt32(RandomPortMin, RandomPortMaxExclusive);
+            if (occupied.Contains(port))
+                continue;
+
+            var listener = new TcpListener(IPAddress.Loopback, port)
+            {
+                ExclusiveAddressUse = true
+            };
+            try
+            {
+                listener.Start();
+                if (Socket.OSSupportsIPv6)
+                {
+                    using var v6Probe = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
+                    {
+                        ExclusiveAddressUse = true
+                    };
+                    v6Probe.Bind(new IPEndPoint(IPAddress.IPv6Loopback, port));
+                }
+                return listener;
+            }
+            catch (SocketException)
+            {
+                occupied.Add(port);
+                try { listener.Stop(); } catch { }
+            }
+        }
+
+        var fallback = new TcpListener(IPAddress.Loopback, 0)
+        {
+            ExclusiveAddressUse = true
+        };
+        fallback.Start();
+        return fallback;
+    }
+
+    private static Socket BindRandomUdpSocket(IPAddress bindAddress, HashSet<int> occupied)
+    {
+        for (var attempt = 0; attempt < 32; attempt++)
+        {
+            var port = RandomNumberGenerator.GetInt32(RandomPortMin, RandomPortMaxExclusive);
+            if (occupied.Contains(port))
+                continue;
+
+            var udp = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp)
+            {
+                DualMode = false,
+                ExclusiveAddressUse = true
+            };
+            DisableUdpResetErrors(udp);
+            try
+            {
+                udp.Bind(new IPEndPoint(bindAddress, port));
+                return udp;
+            }
+            catch (SocketException ex) when (ex.SocketErrorCode is SocketError.AddressAlreadyInUse or SocketError.AccessDenied)
+            {
+                occupied.Add(port);
+                udp.Dispose();
+            }
+            catch
+            {
+                udp.Dispose();
+                throw;
+            }
+        }
+
+        var ephemeral = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp)
+        {
+            DualMode = false,
+            ExclusiveAddressUse = true
+        };
+        DisableUdpResetErrors(ephemeral);
+        try
+        {
+            ephemeral.Bind(new IPEndPoint(bindAddress, 0));
+            return ephemeral;
+        }
+        catch
+        {
+            ephemeral.Dispose();
+            throw;
+        }
+    }
+
+    public static Socket BindUdpSocket(IPAddress preferredIpv6, string roleTag = "")
+    {
+        var occupied = GetOccupiedPorts(includeTcp: false, includeUdp: true);
+        try
+        {
+            return BindRandomUdpSocket(preferredIpv6, occupied);
         }
         catch (SocketException ex)
         {
-            udp.Dispose();
-            LogWrapper.Warn("Link", $"{roleTag} 绑定首选 IPv6 [{preferredIpv6}] 失败 ({ex.SocketErrorCode})，回退到 [::]: {ex.Message}");
-            var fallback = new Socket(AddressFamily.InterNetworkV6, SocketType.Dgram, ProtocolType.Udp)
-            {
-                DualMode = false
-            };
-            DisableUdpResetErrors(fallback);
-            fallback.Bind(new IPEndPoint(IPAddress.IPv6Any, 0));
-            return fallback;
+            LogWrapper.Warn("Link", $"{roleTag} 绑定首选公网 IPv6（已脱敏）失败 ({ex.SocketErrorCode})，回退到通配地址: {ex.Message}");
+            return BindRandomUdpSocket(IPAddress.IPv6Any, occupied);
         }
     }
 
