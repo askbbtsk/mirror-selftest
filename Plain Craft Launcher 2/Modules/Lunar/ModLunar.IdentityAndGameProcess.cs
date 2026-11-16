@@ -365,10 +365,22 @@ public static partial class ModLunar
 
         // 落盘在 RefreshAccountTokenAsync 里做完了才返回 —— 游戏拿到 success 会立刻重读文件
         var fresh = await RefreshAccountTokenAsync(account, cancellationToken).ConfigureAwait(false);
-        return fresh is { } value
-            ? LunarRefreshResult.Ok(value.Message)
-            : LunarRefreshResult.Fail(LunarAccountError.MissingRefreshToken,
+        if (fresh is not { } value)
+            return LunarRefreshResult.Fail(LunarAccountError.MissingRefreshToken,
                 "没能换到新的 accessToken（详见日志）");
+
+        cancellationToken.ThrowIfCancellationRequested();
+        // Official RefreshAccount calls initAuth(game_switch, requestedUuid), not
+        // merely refreshAccount(token). Success makes the game reread this marker.
+        if (!Guid.TryParse(account.MinecraftUuid, out var selectedUuid) ||
+            !LunarAccountStore.SelectRefreshedGameAccount(
+                LunarClientService.SettingsRoot, account.LocalId, selectedUuid))
+            return LunarRefreshResult.Fail(LunarAccountError.Unspecified,
+                "账号已续期，但无法切换账户库中的当前账号；未向游戏报告成功。");
+        _launchedLocalId = account.LocalId;
+        RefreshAccounts();
+        RaiseStateChanged();
+        return LunarRefreshResult.Ok(value.Message);
     }
 
 
@@ -654,26 +666,22 @@ public static partial class ModLunar
     ///         服务端会把同一台机器当成无数次全新安装。
     ///     </para>
     /// </summary>
+    internal static string OfficialLunarRoot => LunarInstallationIdentity.ResolveOfficialRoot(
+        LunarClientService.DefaultLunarRoot,
+        Environment.GetEnvironmentVariable("LUNAR_CLIENT_DIRECTORY"),
+        Environment.CurrentDirectory);
+
     private static string ReadInstallationId()
     {
-        var path = Path.Combine(LunarClientService.LauncherCacheDirectory(LunarRoot), "installation-id");
         try
         {
-            if (File.Exists(path))
-            {
-                var text = File.ReadAllText(path).Trim();
-                if (Guid.TryParse(text, out var existing)) return existing.ToString();
-            }
-
-            var created = Guid.NewGuid();
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, created.ToString());
-            return created.ToString();
+            return LunarInstallationIdentity.ReadOrCreate(OfficialLunarRoot, LunarRoot);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            // 写不进去就现生成一个，不影响启动
-            return Guid.NewGuid().ToString();
+            // An ephemeral fallback would authenticate differently from the shared
+            // launcher and recreate the in-game 4401 failure. Do not launch with it.
+            throw new IOException(Lang.Text("Lunar.Error.InstallationIdentity"), ex);
         }
     }
 
