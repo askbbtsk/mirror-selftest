@@ -16,11 +16,11 @@ namespace PCL;
 /// A native magnifier samples behind the launcher without changing
 /// global capture affinity. The existing glass renderer consumes the same BGRA frames.
 /// </summary>
-internal sealed class LiquidGlassScreenshotCapturePlatform(Func<int> frameRate) : ITahoeCapturePlatform
+internal sealed class LiquidGlassScreenshotCapturePlatform(Func<int> frameRate, Func<bool> pauseDuringMove) : ITahoeCapturePlatform
 {
     private IntPtr _window;
     public bool IsSupported => Environment.Is64BitProcess && OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19041);
-    public bool SupportsLiveMove => true;
+    public bool SupportsLiveMove => !pauseDuringMove();
     public event EventHandler DisplaysChanged
     {
         add => SystemEvents.DisplaySettingsChanged += value;
@@ -170,7 +170,7 @@ internal sealed class LiquidGlassScreenshotCapturePlatform(Func<int> frameRate) 
                     if (++warmup < 3 || Volatile.Read(ref _pending) != 0) continue;
                     if (!PrintWindow(host, dc, 2)) throw new Win32Exception();
                     var sampleSize = LiquidGlassPerformance.SamplingSize(region.Width, region.Height,
-                        Config.Preference.TahoeGlass.SamplingQuality);
+                        region.CoversViewport ? Config.Preference.TahoeGlass.SamplingQuality : 100);
                     if (sampleWidth != sampleSize.Width || sampleHeight != sampleSize.Height ||
                         sampleBitmap == IntPtr.Zero && (sampleSize.Width != region.Width || sampleSize.Height != region.Height))
                     {

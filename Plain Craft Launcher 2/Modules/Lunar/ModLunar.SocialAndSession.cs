@@ -137,17 +137,13 @@ public static partial class ModLunar
 
 
     /// <summary>
-    ///     这次启动写进哪个目录。设置里指定过就用指定的，否则用当前 MC 根目录。
-    ///     <para>
-    ///         刻意不跟实例的版本隔离目录走：Lunar 的版本（比如 1.12.2）和主页面选中的实例
-    ///         （比如某个 1.21 Fabric 模组包）根本不是一个东西，用隔离目录会写坏人家：
-    ///         <c>options.txt</c> 被低版本覆盖、存档和资源包混进去、模组包的设置全乱。
-    ///     </para>
+    ///     优先使用 Lunar 页面指定的启动目录，否则使用 Lunar 的默认游戏目录。
     /// </summary>
     public static string ResolveGameDirectory()
     {
         var custom = Config.Preference.Lunar.GameDir;
-        return string.IsNullOrWhiteSpace(custom) ? ModFolder.mcFolderSelected : custom;
+        if (!string.IsNullOrWhiteSpace(custom)) return custom;
+        return DefaultGameDirectory;
     }
 
 
@@ -219,7 +215,10 @@ public static partial class ModLunar
             if (!GameSessions.IsCurrent(launchSession)) return;
             _stopRequested = false;
             var subVersion = SelectedSubVersion;
+            gameDirectory = LunarClientService.EnsureGameDirectory(gameDirectory);
             GameDirectory = gameDirectory;
+            Log($"游戏目录：{gameDirectory}");
+            Log($"资源包目录：{Path.Combine(gameDirectory, "resourcepacks")}");
 
             // 内存 / JVM 参数 / Java 覆盖都在设置页里配，这里只负责解析出最终值
             var settings = LunarLaunchProfile.Resolve(subVersion, ResolvePclGlobalMemoryMb());
@@ -237,8 +236,6 @@ public static partial class ModLunar
             Log(module is null
                 ? $"Loader：{SelectedModuleId}（还没拿到版本元数据，按兜底值走）"
                 : $"Loader：{module.DisplayName}（{module.Id}，该版本共 {Modules.Count} 种可选）");
-            Log($"游戏目录：{gameDirectory}");
-
             // 首次用某个版本时 Genesis 要先把原版客户端下到 %APPDATA%\.minecraft，
             // 这一步以前是它自己在后台闷头下，现在改成由 PCL 下（有进度、能看见）
             await EnsureVanillaAsync(subVersion, CancellationToken.None).ConfigureAwait(false);
@@ -732,9 +729,7 @@ public static partial class ModLunar
         // ③ 既没选 Lunar 身份账号，账户库里也没有账号。
         //    这里**不再**偷偷回落到 PCL 主页面的登录：那套令牌是 PCL 自己的 client id 签的，
         //    JWT 里的 aid 对不上，Lunar 认不出来，启动只会卡在 Connecting...。
-        throw new InvalidOperationException(
-            "还没有可用的 Lunar 账号。请在账号下拉框右侧点「登录」，用 Lunar 身份登录一次。\n" +
-            "这个登录和 PCL 主页面的账号是两套，互不影响。");
+        throw new LunarSocialException(Lang.Text("Lunar.Social.NeedAccount"));
     }
 
 }

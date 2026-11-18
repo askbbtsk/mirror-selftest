@@ -15,6 +15,17 @@ namespace PCL.Core.Test.UI;
 [DoNotParallelize]
 public sealed class TahoeDesktopCaptureTests
 {
+    [TestMethod]
+    public void MagnifierBackendHonorsPausePreferenceDuringWindowMoveAndResize()
+    {
+        bool pause = false;
+        var platform = new LiquidGlassScreenshotCapturePlatform(() => 60, () => pause);
+
+        Assert.IsTrue(platform.SupportsLiveMove);
+        pause = true;
+        Assert.IsFalse(platform.SupportsLiveMove);
+    }
+
     [STATestMethod]
     public void LiveMoveKeepsSessionBitmapAndNewFramesInsteadOfFreezingTheLastImage()
     {

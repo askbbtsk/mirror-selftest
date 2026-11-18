@@ -3264,6 +3264,7 @@ Release 发布时间：{2}
     <sys:String x:Key="Setup.Ui.Tahoe.Enable">使用液态玻璃界面</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Description">启用液态玻璃界面，会带来一定性能开销。</sys:String>
     <sys:String x:Key="Setup.Ui.Tahoe.Desktop">实时桌面折射</sys:String>
+    <sys:String x:Key="Setup.Ui.Tahoe.PauseDuringMove">移动或缩放窗口时暂停折射</sys:String>
     <sys:String x:Key="Common.Status.Cancelling">正在取消…</sys:String>
     <sys:String x:Key="Setup.Ui.WallpaperEngine.Follow">跟随 Wallpaper Engine 壁纸</sys:String>
     <sys:String x:Key="Setup.Ui.WallpaperEngine.Description">支持视频、场景和网页壁纸。由 Wallpaper Engine 独立播放，进度可能与桌面不同，会增加资源占用。</sys:String>
@@ -3736,6 +3737,7 @@ Release 发布时间：{2}
     <sys:String x:Key="Link.Guest.Connecting">正在连房主，等 1 秒看看能不能直接通…</sys:String>
     <sys:String x:Key="Link.Guest.NeedAckStatus">请点击下方「复制回执码」发给房主放行，保持本页开启即可自动连通：</sys:String>
     <sys:String x:Key="Link.Guest.ConnectionLost">与房主的连接已断开，请断开后重新加入房间。</sys:String>
+    <sys:String x:Key="Link.Guest.WorldUnavailable">已连上房主，等待世界开放。</sys:String>
     <sys:String x:Key="Link.Guest.ConnectedStatus">已经连上房主（延迟 {0} ms）！打开游戏点「多人游戏」，拉到最底下就能进。</sys:String>
     <sys:String x:Key="Link.Guest.AckExplain">你的回执码（ACK- 加 26 个常用汉字，共 30 字符）：</sys:String>
     <sys:String x:Key="Link.Guest.CopyAck">复制回执码</sys:String>
@@ -3979,6 +3981,7 @@ Release 发布时间：{2}
     <sys:String x:Key="Lunar.Social.Online">已连接 Lunar 好友系统</sys:String>
     <sys:String x:Key="Lunar.Social.Connecting">正在连接…</sys:String>
     <sys:String x:Key="Lunar.Social.Connect">连接</sys:String>
+    <sys:String x:Key="Lunar.Social.NeedAccount">请先登录 Lunar 账号。</sys:String>
     <sys:String x:Key="Lunar.Social.Disconnect">断开</sys:String>
     <sys:String x:Key="Lunar.Social.Refresh">刷新</sys:String>
     <sys:String x:Key="Lunar.Social.Send">发送</sys:String>
@@ -4109,7 +4112,7 @@ Lunar 会话已于 {2} 过期，进游戏后由 IPC 续期</sys:String>
     <sys:String x:Key="Lunar.Error.OperationFailed">Lunar 页面操作失败。请查看错误详情。</sys:String>
     <sys:String x:Key="Tools.Import.Shortcut">转移 PCL 设置</sys:String>
     <sys:String x:Key="Lunar.Tip.PickGameDir">选一个 .minecraft 目录当启动目录</sys:String>
-    <sys:String x:Key="Lunar.Tip.ResetGameDir">恢复默认（跟随当前 MC 目录）</sys:String>
+    <sys:String x:Key="Lunar.Tip.ResetGameDir">恢复 Lunar 默认启动目录</sys:String>
     <sys:String x:Key="Lunar.Tip.PickRoot">选 Lunar 物料根目录</sys:String>
     <sys:String x:Key="Lunar.Tip.ResetRoot">恢复默认（~/.lunarclient）</sys:String>
     <sys:String x:Key="Lunar.Ipc.AddAccount">游戏里点了「添加账号」。PCL 不能代替游戏登录，请在这里登录微软账号后再启动。</sys:String>
