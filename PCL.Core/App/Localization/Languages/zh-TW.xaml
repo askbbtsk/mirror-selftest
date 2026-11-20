@@ -830,6 +830,7 @@
     <!-- Event -->
 
     <sys:String x:Key="Event.Download.Confirm">即將從該網址下載檔案：&#xA;{0}</sys:String>
+    <sys:String x:Key="Event.Download.ConfirmDestination">下載位址：&#xA;{0}&#xA;&#xA;儲存至（可能覆寫現有檔案）：&#xA;{1}</sys:String>
     <sys:String x:Key="Event.Error.DownloadUrlRequired">EventData 必須為以 http:// 或 https:// 開頭的網址。&#xA;PCL Lite 不支援其他下載協議。</sys:String>
     <sys:String x:Key="Event.Error.ExecutionFailed">事件執行失敗（{0}, {1}）</sys:String>
     <sys:String x:Key="Event.Error.FileNotFound">未找到 EventData 指向的本機檔案：{0}</sys:String>
@@ -3569,6 +3570,8 @@ Release 發布時間：{2}
     <sys:String x:Key="Bedrock.Download.State.Downloaded">已下載</sys:String>
     <sys:String x:Key="Bedrock.Download.State.Installed">已安裝</sys:String>
     <sys:String x:Key="Bedrock.Download.Action.DownloadAndInstall">下載並安裝</sys:String>
+    <sys:String x:Key="Bedrock.Download.Action.Working">處理中</sys:String>
+    <sys:String x:Key="Bedrock.Download.Interrupted">下載中斷，請重試。</sys:String>
     <sys:String x:Key="Bedrock.Download.Action.Installed">已安裝</sys:String>
     <sys:String x:Key="Bedrock.Download.DeveloperMode.On">開發人員模式已開啟，可以安裝商店包。</sys:String>
     <sys:String x:Key="Bedrock.Download.DeveloperMode.Off">開發人員模式未開啟，商店包裝不上。點「開發人員模式」按鈕試試（需要系統管理員權限）。</sys:String>
