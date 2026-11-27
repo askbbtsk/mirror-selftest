@@ -38,7 +38,6 @@ public partial class PageSetupLauncherMisc
         }
 
         Loaded += PageSetupLink_Loaded;
-        Unloaded += (_, _) => _StopDiscordStatusTimer();
         Loaded += (_, _) =>
         {
             ModAnimation.AniControlEnabled += 1;
@@ -191,13 +190,13 @@ public partial class PageSetupLauncherMisc
     private void BuildConsentList()
     {
         PanConsentList.Children.Clear();
-        var allowed = NetworkConsentService.GetPersistedAllowed();
-
-        foreach (var info in NetworkPurposeCatalog.All.Where(x => x.Purpose != NetworkPurpose.Unknown))
+        foreach (var info in NetworkPurposeCatalog.All.Concat(NetworkPurposeCatalog.RequestedModules))
         {
-            var isAllowed = allowed.Contains(info.Id);
+            var isAllowed = NetworkConsentService.IsAllowed(info);
+            var name = info.Purpose == NetworkPurpose.Unknown
+                ? info.TitleZh : Lang.Text("Network.Purpose." + info.Id);
 
-            var row = new Grid { Margin = new Thickness(0, 0, 0, 7) };
+            var row = new Grid { Margin = new Thickness(0, 0, 0, 7), MinHeight = 38 };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
@@ -205,26 +204,27 @@ public partial class PageSetupLauncherMisc
             {
                 VerticalAlignment = VerticalAlignment.Center,
                 TextWrapping = TextWrapping.Wrap,
-                Text = $"{info.TitleZh}　{info.Hosts.Length} 个域名"
+                Text = name,
+                ToolTip = string.Join("\n", info.Hosts)
             };
             label.SetResourceReference(TextBlock.ForegroundProperty,
                 isAllowed ? "ColorBrush1" : "ColorBrushGray2");
 
             var toggle = new MyTextButton
             {
-                Text = isAllowed ? "撤销" : "允许",
+                Text = Lang.Text(isAllowed ? "Network.Manager.Revoke" : "Network.Manager.Allow"),
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(10, 0, 0, 0)
             };
             toggle.Click += (_, _) =>
             {
                 if (isAllowed)
-                    NetworkConsentService.Revoke(info.Purpose);
+                    NetworkConsentService.Revoke(info);
                 else
-                    NetworkConsentService.AllowPermanently(info.Purpose);
+                    NetworkConsentService.AllowPermanently(info);
                 BuildConsentList();
                 HintService.Hint(
-                    $"已{(isAllowed ? "撤销" : "允许")}「{info.TitleZh}」的网络访问",
+                    Lang.Text("Network.Manager.Changed", name),
                     HintType.Success, false);
             };
 
@@ -266,13 +266,13 @@ public partial class PageSetupLauncherMisc
 
     private void ResetConsentBtn_OnClicked(object sender, MouseButtonEventArgs e)
     {
-        if (ModMain.MyMsgBox("确定要清空全部网络白名单吗？\n清空后，每个用途都会在下一次联网前重新询问。",
-                "清空网络白名单", "清空", "取消", isWarn: true) != 1)
+        if (ModMain.MyMsgBox(Lang.Text("Network.Manager.Reset.Confirm"),
+                Lang.Text("Network.Manager.Reset"), Lang.Text("Network.Manager.Reset"), Lang.Text("Common.Action.Cancel"), isWarn: true) != 1)
             return;
 
         NetworkConsentService.ResetAll();
         BuildConsentList();
-        HintService.Hint("网络白名单已清空", HintType.Success, false);
+        HintService.Hint(Lang.Text("Network.Manager.Reset.Done"), HintType.Success, false);
     }
 
     #endregion
@@ -586,8 +586,6 @@ public partial class PageSetupLauncherMisc
 
     #region Discord 状态显示
 
-    private System.Windows.Threading.DispatcherTimer? _discordStatusTimer;
-
     /// <summary>
     ///     总开关。关掉时把下面的配置项全部收起来。
     /// </summary>
@@ -604,47 +602,6 @@ public partial class PageSetupLauncherMisc
         var enabled = Config.Discord.Enabled;
         PanDiscordOptions.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
         LabDiscordDisabledHint.Visibility = enabled ? Visibility.Collapsed : Visibility.Visible;
-
-        if (!enabled)
-        {
-            _StopDiscordStatusTimer();
-            return;
-        }
-
-        UpdateDiscordStatus();
-        _StartDiscordStatusTimer();
-    }
-
-    private void _StartDiscordStatusTimer()
-    {
-        _discordStatusTimer ??= new System.Windows.Threading.DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(2)
-        };
-        _discordStatusTimer.Tick -= _DiscordStatusTick;
-        _discordStatusTimer.Tick += _DiscordStatusTick;
-        _discordStatusTimer.Start();
-    }
-
-    private void _StopDiscordStatusTimer()
-    {
-        _discordStatusTimer?.Stop();
-    }
-
-    private void _DiscordStatusTick(object? sender, EventArgs e) => UpdateDiscordStatus();
-
-    /// <summary>
-    ///     状态由后台线程更新，这里只读快照。
-    /// </summary>
-    private void UpdateDiscordStatus()
-    {
-        var text = DiscordRichPresenceService.StatusText;
-        LabDiscordStatus.Text = $"状态：{text}";
-
-        var brush = text.StartsWith("已连接", StringComparison.Ordinal) ? "ColorBrush1"
-            : text.StartsWith("异常", StringComparison.Ordinal) ? "ColorBrushRedLight"
-            : "ColorBrushGray2";
-        LabDiscordStatus.SetResourceReference(TextBlock.ForegroundProperty, brush);
     }
 
     /// <summary>
@@ -666,21 +623,6 @@ public partial class PageSetupLauncherMisc
         if (Config.Discord.Fields == value) return;
         Config.Discord.Fields = value;
         DiscordRichPresenceService.RequestRefresh();
-    }
-
-    // 注意：MyButton.Click 用的是自定义委托 ClickEventHandler(object, MouseButtonEventArgs)，
-    // 不是 WPF 原生的 RoutedEventHandler。写成 EventArgs 编译能过（事件挂接走运行期
-    // Delegate.CreateDelegate），但一点开设置页就会抛 XamlParseException，整个页面加载失败。
-    private void BtnDiscordRefresh_Click(object sender, MouseButtonEventArgs e)
-    {
-        DiscordRichPresenceService.RequestRefresh();
-        UpdateDiscordStatus();
-    }
-
-    private void BtnDiscordClear_Click(object sender, MouseButtonEventArgs e)
-    {
-        DiscordRichPresenceService.ClearActivity();
-        UpdateDiscordStatus();
     }
 
     #endregion
